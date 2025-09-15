@@ -9,7 +9,6 @@ const nextConfig: NextConfig = {
         destination: "https://glowing-bean-c67.notion.site/Clement-Hugbo-a776e38330ad40f684007bd25e97fa4e?source=copy_link",
         permanent: true, // 308 (use false for 307/temp)
       },
-      // optional: redirect anything nested under /portfolio/*
       {
         source: "/portfolio/:path*",
         destination: "https://glowing-bean-c67.notion.site/Clement-Hugbo-a776e38330ad40f684007bd25e97fa4e?source=copy_link/:path*",
