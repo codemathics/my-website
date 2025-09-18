@@ -214,7 +214,7 @@ export default function Home() {const mousePosition = useMousePosition();
           {/* Bottom about me button */}
           <div className={`transition-all duration-700 delay-600 ${showText ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
             <button className="btn-primary pointer-events-auto">
-              about me
+            <a href="https://codemathics.design/portfolio">my portfolio</a>
             </button>
           </div>
         </div>
