@@ -24,3 +24,57 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.fade-up-enter {
+  opacity: 0;
+  transform: translateY(24px) scale(0.9);
+}
+
+.fade-up-enter-active {
+  opacity: 1;
+  transform: translateY(0) scale(0.9);
+  transition: opacity 1200ms ease, transform 1200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Typography */
+.main-text {
+  font-family: 'Helvetica Now Display', sans-serif;
+  font-weight: 500;
+  font-size: 16px;
+  color: #C9C9C9;
+}
+
+.logo-text {
+  font-size: 18px;
+  font-weight: 500;
+  color: #C9C9C9;
+}
+
+.button-text {
+  color: #C9C9C9;
+}
+
+/* Button styles */
+.btn-primary {
+  background: rgba(0, 0, 0, 0.6);
+  border: .5px solid rgba(201, 201, 201, 0.2);
+  border-radius: 12px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #C9C9C9;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.btn-primary:hover {
+  background: rgba(0, 0, 0, 0.8);
+  border-color: rgba(201, 201, 201, 0.178);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
