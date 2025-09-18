@@ -31,6 +31,19 @@ export default function Home() {
   
   // Interactive elements
   const [hoveredCity, setHoveredCity] = React.useState<string | null>(null);
+  const [isMobile, setIsMobile] = React.useState(false);
+
+  // ===== MOBILE DETECTION =====
+  React.useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // ===== ENTRANCE ANIMATION SEQUENCE =====
   React.useEffect(() => {
@@ -97,17 +110,17 @@ export default function Home() {
 
   // ===== RENDER =====
   return (
-    <div className="relative h-screen w-screen overflow-hidden bg-black">
+    <div className={`relative w-screen overflow-hidden bg-black ${isMobile ? 'mobile-container' : 'h-screen'}`}>
 
       {/* Color image with single moving spotlight */}
       <img
         src="https://res.cloudinary.com/dhajah4xb/image/upload/v1758094446/headShot1_buzn8d.png"
-        className={`absolute inset-0 h-full w-full object-contain ${hasEntered ? "fade-up-enter-active" : "fade-up-enter"}`}
+        className={`absolute inset-0 h-full w-full ${isMobile ? 'object-cover' : 'object-contain'} ${hasEntered ? "fade-up-enter-active" : "fade-up-enter"}`}
         alt="Image"
         style={{
           transform: "scale(0.9)",
           transformOrigin: "center",
-          maskImage: `radial-gradient(ellipse 36rem 26rem at ${current.x}px ${current.y}px,
+          maskImage: `radial-gradient(ellipse ${isMobile ? '28rem 20rem' : '36rem 26rem'} at ${current.x}px ${current.y}px,
             rgba(0,0,0,1) 0%,
             rgba(0,0,0,1) 26%,
             rgba(0,0,0,0.95) 40%,
@@ -116,7 +129,7 @@ export default function Home() {
             rgba(0,0,0,0.3) 84%,
             rgba(0,0,0,0.12) 94%,
             rgba(0,0,0,0) 100%)`,
-          WebkitMaskImage: `radial-gradient(ellipse 36rem 26rem at ${current.x}px ${current.y}px,
+          WebkitMaskImage: `radial-gradient(ellipse ${isMobile ? '28rem 20rem' : '36rem 26rem'} at ${current.x}px ${current.y}px,
             rgba(0,0,0,1) 0%,
             rgba(0,0,0,1) 26%,
             rgba(0,0,0,0.95) 40%,
@@ -129,7 +142,7 @@ export default function Home() {
       />
 
       {/* Content overlay */}
-      <div className="absolute inset-0 flex flex-col justify-between p-8 pointer-events-none">
+      <div className={`absolute inset-0 flex flex-col justify-between ${isMobile ? 'p-4' : 'p-8'} pointer-events-none`}>
         {/* Top navigation */}
         <div className="flex justify-between items-start">
           {/* Logo */}
@@ -137,7 +150,7 @@ export default function Home() {
             <img 
               src="/logo.svg" 
               alt="Logo" 
-              className="w-24 h-16"
+              className={isMobile ? "mobile-logo" : "w-24 h-16"}
             />
           </div>
           
@@ -167,6 +180,8 @@ export default function Home() {
                   className="relative inline-block cursor-pointer group"
                   onMouseEnter={() => setHoveredCity('san-francisco')}
                   onMouseLeave={() => setHoveredCity(null)}
+                  onTouchStart={() => setHoveredCity('san-francisco')}
+                  onTouchEnd={() => setHoveredCity(null)}
                 >
                   <span className="relative">
                     san francisco
@@ -180,7 +195,7 @@ export default function Home() {
                     <Lottie 
                       key={hoveredCity === 'san-francisco' ? 'sf-active' : 'sf-inactive'}
                       animationData={sfAnimation} 
-                      style={{ width: 80, height: 45 }}
+                      style={{ width: isMobile ? 60 : 80, height: isMobile ? 35 : 45 }}
                       loop={false}
                       autoplay={true}
                     />
@@ -193,6 +208,8 @@ export default function Home() {
                   className="relative inline-block cursor-pointer group"
                   onMouseEnter={() => setHoveredCity('dubai')}
                   onMouseLeave={() => setHoveredCity(null)}
+                  onTouchStart={() => setHoveredCity('dubai')}
+                  onTouchEnd={() => setHoveredCity(null)}
                 >
                   <span className="relative">
                     dubai
@@ -206,7 +223,7 @@ export default function Home() {
                     <Lottie 
                       key={hoveredCity === 'dubai' ? 'uae-active' : 'uae-inactive'}
                       animationData={uaeAnimation} 
-                      style={{ width: 80, height: 45 }}
+                      style={{ width: isMobile ? 60 : 80, height: isMobile ? 35 : 45 }}
                       loop={false}
                       autoplay={true}
                     />
