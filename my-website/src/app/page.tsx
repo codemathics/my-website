@@ -5,28 +5,34 @@ import Lottie from "lottie-react";
 import quoteAnimation from "../../quote.json";
 import sfAnimation from "../../public/sf.json";
 import uaeAnimation from "../../public/uae.json";
-export default function Home() {const mousePosition = useMousePosition();
 
-  // Center position for the face spotlight (fallback when mouse is not detected)
+export default function Home() {
+  const mousePosition = useMousePosition();
+
+  // ===== SPOTLIGHT POSITIONING =====
   const centerX = typeof window !== "undefined" ? window.innerWidth / 2 : 960;
-  const centerY =
-    typeof window !== "undefined" ? window.innerHeight / 2.2 : 400; // Slightly higher than center for face position
+  const centerY = typeof window !== "undefined" ? window.innerHeight / 2.2 : 400;
 
-  // Animate spotlight: start centered; follow mouse with subtle delay and smoothing
+  // ===== STATE MANAGEMENT =====
+  // Spotlight animation
   const [current, setCurrent] = React.useState({ x: centerX, y: centerY });
   const hasUserMovedRef = React.useRef(false);
   const smoothedTargetRef = React.useRef({ x: centerX, y: centerY });
   const entranceCompleteRef = React.useRef(false);
+  
+  // Entrance animations
   const [hasEntered, setHasEntered] = React.useState(false);
+  const [showLogo, setShowLogo] = React.useState(false);
+  const [showTopButton, setShowTopButton] = React.useState(false);
   const [showQuote, setShowQuote] = React.useState(false);
   const [showText, setShowText] = React.useState(false);
   const [showLine1, setShowLine1] = React.useState(false);
   const [showLine2, setShowLine2] = React.useState(false);
+  
+  // Interactive elements
   const [hoveredCity, setHoveredCity] = React.useState<string | null>(null);
-  const [showLogo, setShowLogo] = React.useState(false);
-  const [showTopButton, setShowTopButton] = React.useState(false);
 
-  // Run a soft fade-up entrance before enabling mouse-follow
+  // ===== ENTRANCE ANIMATION SEQUENCE =====
   React.useEffect(() => {
     const entranceDurationMs = 1200;
     const t1 = setTimeout(() => setHasEntered(true), 120);
@@ -51,6 +57,7 @@ export default function Home() {const mousePosition = useMousePosition();
     };
   }, []);
 
+  // ===== MOUSE FOLLOW ANIMATION =====
   React.useEffect(() => {
     if (!entranceCompleteRef.current) return;
     if (mousePosition.x !== null || mousePosition.y !== null) {
@@ -58,6 +65,7 @@ export default function Home() {const mousePosition = useMousePosition();
     }
   }, [mousePosition.x, mousePosition.y]);
 
+  // ===== SPOTLIGHT SMOOTHING ANIMATION =====
   React.useEffect(() => {
     let rafId: number;
     const targetLag = 0.06; // smaller = more delay before target catches up
@@ -87,6 +95,7 @@ export default function Home() {const mousePosition = useMousePosition();
     return () => cancelAnimationFrame(rafId);
   }, [centerX, centerY, mousePosition.x, mousePosition.y]);
 
+  // ===== RENDER =====
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-black">
 
