@@ -14,6 +14,12 @@ const nextConfig: NextConfig = {
         destination: "https://glowing-bean-c67.notion.site/Clement-Hugbo-a776e38330ad40f684007bd25e97fa4e?source=copy_link/:path*",
         permanent: true,
       },
+        /* apply to work with me reroutes to tally */
+        {
+          source: "/apply",
+          destination: "https://tally.so/r/meblrO",
+          permanent: true,
+        },
     ];
   },
 };

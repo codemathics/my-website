@@ -110,15 +110,15 @@ export default function Home() {
 
   // ===== RENDER =====
   return (
-    <div className={`relative w-screen overflow-hidden bg-black ${isMobile ? 'mobile-container' : 'h-screen'}`}>
+    <div className={`relative w-screen overflow-hidden bg-black ${isMobile ? 'mobile-container' : 'h-screen'}`} style={{ margin: 0, padding: 0, border: 'none', outline: 'none' }}>
 
       {/* Color image with single moving spotlight */}
       <img
         src="https://res.cloudinary.com/dhajah4xb/image/upload/v1758094446/headShot1_buzn8d.png"
-        className={`absolute inset-0 h-full w-full ${isMobile ? 'object-cover' : 'object-contain'} ${hasEntered ? "fade-up-enter-active" : "fade-up-enter"}`}
+        className={`absolute inset-0 h-full w-full ${isMobile ? 'mobile-image' : 'object-contain'} ${hasEntered ? "fade-up-enter-active" : "fade-up-enter"}`}
         alt="Image"
         style={{
-          transform: "scale(0.9)",
+          transform: isMobile ? "scale(.8)" : "scale(0.3)",
           transformOrigin: "center",
           maskImage: `radial-gradient(ellipse ${isMobile ? '28rem 20rem' : '36rem 26rem'} at ${current.x}px ${current.y}px,
             rgba(0,0,0,1) 0%,
@@ -144,14 +144,22 @@ export default function Home() {
       {/* Content overlay */}
       <div className={`absolute inset-0 flex flex-col justify-between ${isMobile ? 'p-4' : 'p-8'} pointer-events-none`}>
         {/* Top navigation */}
-        <div className="flex justify-between items-start">
+        <div className={`flex justify-between ${isMobile ? 'items-center' : 'items-start'}`}>
           {/* Logo */}
           <div className={`flex items-center transition-all duration-700 ${showLogo ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-            <img 
-              src="/logo.svg" 
-              alt="Logo" 
-              className={isMobile ? "mobile-logo" : "w-24 h-16"}
-            />
+            {isMobile ? (
+              <img 
+                src="/logo.svg" 
+                alt="Logo" 
+                className="mobile-logo"
+              />
+            ) : (
+              <img 
+                src="/logo.svg" 
+                alt="Logo" 
+                className="w-24 h-16"
+              />
+            )}
           </div>
           
           {/* About me button */}
