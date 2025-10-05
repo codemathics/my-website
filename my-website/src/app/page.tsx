@@ -118,7 +118,7 @@ export default function Home() {
         className={`absolute inset-0 h-full w-full ${isMobile ? 'mobile-image' : 'object-contain'} ${hasEntered ? "fade-up-enter-active" : "fade-up-enter"}`}
         alt="Image"
         style={{
-          transform: isMobile ? "scale(.8)" : "scale(0.3)",
+          transform: isMobile ? "scale(1.1)" : "scale(1)",
           transformOrigin: "center",
           maskImage: `radial-gradient(ellipse ${isMobile ? '28rem 20rem' : '36rem 26rem'} at ${current.x}px ${current.y}px,
             rgba(0,0,0,1) 0%,
