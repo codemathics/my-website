@@ -1,0 +1,374 @@
+/* ─── city modal ─────────────────────────────────────── */
+
+/* overlay */
+.city-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2000;
+  cursor: pointer;
+}
+
+/* panel — height reveal animation */
+.city-modal-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 0;
+  background: #0B0B0B;
+  overflow: hidden;
+  transition: height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.city-modal-panel.visible {
+  height: 100%;
+  transition: height 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* close button — fixed to viewport, above everything */
+.city-modal-close {
+  position: fixed;
+  top: 24px;
+  right: 40px;
+  width: 48px;
+  height: 48px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 9999;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 0.3s ease;
+  pointer-events: auto;
+}
+
+.city-modal-close.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.city-modal-close.closing {
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.city-modal-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* content container */
+.city-modal-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding: 80px 40px 40px;
+  box-sizing: border-box;
+  overflow: hidden;
+  cursor: default;
+  opacity: 1;
+  transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.city-modal-content.closing {
+  opacity: 0;
+}
+
+/* ─── titles ─────────────────────────────────────────── */
+
+.city-modal-titles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.city-modal-title {
+  position: absolute;
+  font-family: 'Helvetica Now Display', sans-serif;
+  font-weight: 400;
+  font-size: clamp(80px, 15vw, 210px);
+  line-height: 0.77em;
+  letter-spacing: -0.04em;
+  color: #FFFFFF;
+  opacity: 0;
+  transform: translateY(60px);
+  transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.city-modal-title.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* title positions */
+.city-modal-title:nth-child(1) { top: 20px; left: 40px; }
+.city-modal-title:nth-child(2) { top: 20px; right: 40px; }
+.city-modal-title:nth-child(3) { bottom: 80px; left: 40px; }
+.city-modal-title:nth-child(4) { bottom: 80px; right: 40px; }
+
+/* ─── description ────────────────────────────────────── */
+
+.city-modal-description {
+  position: absolute;
+  top: 100px;
+  left: 0;
+  transform: translateY(30px);
+  max-width: 500px;
+  font-family: var(--font-gochi-hand), 'Gochi Hand', cursive;
+  font-size: 18px;
+  line-height: 1.5em;
+  letter-spacing: -0.01em;
+  color: #C9C9C9;
+  text-align: left;
+  opacity: 0;
+  transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 4;
+}
+
+.city-modal-description.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ─── image carousel / collage ───────────────────────── */
+
+.city-modal-carousel {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: hidden;
+  z-index: 1;
+  touch-action: none;
+  cursor: none;
+  user-select: none;
+}
+
+/* collage track — translates via css custom properties */
+.city-modal-random-track {
+  position: relative;
+  height: 100%;
+  will-change: transform;
+  transform: translate3d(
+    calc(-1px * var(--rs-offset-x, 0)),
+    calc(-1px * var(--rs-offset-y, 0)),
+    0
+  );
+}
+
+/* individual image card */
+.city-modal-random-item {
+  position: absolute;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18), 0 24px 64px rgba(0, 0, 0, 0.12);
+  opacity: 0;
+  transform-origin: center;
+  will-change: transform, opacity;
+  pointer-events: auto;
+  --rs-intro-y: 18px;
+  transform: translate3d(
+      calc(var(--rs-offset-x, 0) * 1px * var(--rs-parallax, 0)),
+      calc(var(--rs-offset-y, 0) * 1px * var(--rs-parallax, 0)),
+      0
+    )
+    translateY(var(--rs-intro-y))
+    rotate(var(--rs-rot, 0deg));
+  transition: opacity 0.6s ease,
+    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.5s ease 0.05s;
+}
+
+.city-modal-random-item.visible {
+  opacity: 1;
+  --rs-intro-y: 0px;
+  transform: translate3d(
+      calc(var(--rs-offset-x, 0) * 1px * var(--rs-parallax, 0)),
+      calc(var(--rs-offset-y, 0) * 1px * var(--rs-parallax, 0)),
+      0
+    )
+    translateY(var(--rs-intro-y))
+    rotate(var(--rs-rot, 0deg));
+}
+
+/* during drag — no transition smoothing */
+.city-modal-carousel.dragging .city-modal-random-track {
+  transition: transform 0ms linear;
+}
+.city-modal-carousel.dragging .city-modal-random-item {
+  transition: opacity 0.6s ease, transform 0ms linear;
+}
+
+/* on release — playful settle with per-item delay */
+.city-modal-carousel.settling .city-modal-random-track {
+  transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.city-modal-carousel.settling .city-modal-random-item {
+  transition: opacity 0.6s ease,
+    transform var(--rs-settle-ms, 420ms) cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.city-modal-random-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  transform: scale(1);
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* image hover */
+.city-modal-random-item:hover {
+  z-index: 10 !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.22), 0 32px 80px rgba(0, 0, 0, 0.16);
+  transition: opacity 0.6s ease,
+    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.5s ease 0.08s;
+}
+
+.city-modal-random-item:hover img {
+  transform: scale(1.08);
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.05s;
+}
+
+/* ─── drag-me indicator ──────────────────────────────── */
+
+.city-modal-dragme {
+  position: fixed;
+  width: 116px;
+  height: 116px;
+  border-radius: 60px;
+  background: #ffffff;
+  color: #0b0b0b;
+  pointer-events: none;
+  z-index: 6;
+  transform: translate(-50%, -120%) scale(0.7);
+  opacity: 0;
+  filter: blur(10px);
+  transition:
+    opacity 1s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 1s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.city-modal-dragme.visible {
+  opacity: 1;
+  transform: translate(-50%, -120%) scale(1);
+  filter: blur(0px);
+  animation: dragMePulse 3.2s ease-in-out 1s infinite;
+  transition:
+    opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.15s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.city-modal-dragme.visible.dragging {
+  transform: translate(-50%, -120%) scale(0.92);
+  animation: none;
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.city-modal-dragme-inner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.city-modal-dragme-text {
+  font-family: 'Helvetica Now Display', sans-serif;
+  font-weight: 500;
+  font-size: 20px;
+  line-height: 0.95em;
+  letter-spacing: -0.02em;
+  text-align: center;
+  display: block;
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.city-modal-dragme.visible .city-modal-dragme-text {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* staggered text reveal */
+.city-modal-dragme.visible .city-modal-dragme-text:nth-child(1) { transition-delay: 0.7s; }
+.city-modal-dragme.visible .city-modal-dragme-text:nth-child(2) { transition-delay: 0.9s; }
+
+@keyframes dragMePulse {
+  0%   { transform: translate(-50%, -120%) scale(1); }
+  50%  { transform: translate(-50%, -120%) scale(1.02); }
+  100% { transform: translate(-50%, -120%) scale(1); }
+}
+
+/* ─── mobile ─────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .city-modal-content {
+    padding: 60px 20px 20px;
+  }
+
+  .city-modal-close {
+    top: 16px;
+    right: 16px;
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+
+  .city-modal-title {
+    font-size: clamp(40px, 12vw, 80px);
+  }
+
+  .city-modal-title:nth-child(1) { top: 60px; left: 20px; }
+  .city-modal-title:nth-child(2) { top: 60px; right: 20px; font-size: clamp(30px, 10vw, 60px); }
+  .city-modal-title:nth-child(3) { bottom: 100px; left: 20px; }
+  .city-modal-title:nth-child(4) { bottom: 100px; right: 20px; }
+
+  .city-modal-description {
+    top: auto;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%) translateY(30px);
+    width: 90%;
+    max-width: 280px;
+    font-size: 14px;
+  }
+
+  .city-modal-description.visible {
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .city-modal-carousel {
+    height: auto;
+  }
+
+  .city-modal-random-item {
+    border-radius: 8px;
+  }
+}
