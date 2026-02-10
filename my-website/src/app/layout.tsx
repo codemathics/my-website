@@ -21,6 +21,25 @@ const gochiHand = Gochi_Hand({
 export const metadata: Metadata = {
   title: "clement hugbo — product designer & creative director",
   description: "personal website of clement hugbo, product designer and creative director based in san francisco and dubai.",
+  icons: {
+    icon: "/icon.png",
+  },
+  openGraph: {
+    title: "clement hugbo — product designer & creative director",
+    description: "personal website of clement hugbo, product designer and creative director based in san francisco and dubai.",
+    images: [
+      {
+        url: "/og.png",
+      },
+    ],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "clement hugbo — product designer & creative director",
+    description: "personal website of clement hugbo, product designer and creative director based in san francisco and dubai.",
+    images: ["/og.png"],
+  },
 };
 
 export default function RootLayout({
