@@ -1,0 +1,27 @@
+/* underline wrapper — matches text width */
+.nav-link-inner {
+  position: relative;
+  display: inline-block;
+  padding-bottom: 2px;
+}
+
+/* underline animation */
+.nav-underline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background-color: rgba(255, 255, 255, 0.8);
+  pointer-events: none;
+  transform: scaleX(0);
+  transform-origin: right center;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1) 0.05s;
+}
+
+/* hover — line grows left to right */
+.nav-link:hover .nav-underline {
+  transform: scaleX(1);
+  transform-origin: left center;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
