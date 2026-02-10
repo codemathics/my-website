@@ -35,9 +35,8 @@ const sfContent = {
 
 // dubai content
 const dubaiContent = {
-  title: ["the", "desert", "oasis", "city"],
-  description:
-    "a collage of my most cherished moments exploring the vibrant culture, architecture, and energy of dubai, uae!",
+  title: ["habibi,", "welcome", "to", "dubai 😎"],
+  description: "this page is still under construction 🚧, bear with me! 😭",
   images: [
     "https://res.cloudinary.com/dhajah4xb/image/upload/v1738355118/IMG_7869_f1ddrm.jpg",
     "https://res.cloudinary.com/dhajah4xb/image/upload/v1738355118/IMG_7784_j6d0w4.jpg",
