@@ -1,5 +1,7 @@
 "use client";
 import React from "react";
+import Link from "next/link";
+import Image from "next/image";
 import "./NavLink.css";
 
 interface NavItem {
@@ -52,13 +54,13 @@ export default function Navbar({ showLogo = true, showNav = true }: NavbarProps)
       }}
     >
       {/* logo */}
-      <a
+      <Link
         href="/"
         className={`navbar-logo ${showLogo ? "visible" : ""}`}
         style={{ pointerEvents: "auto" }}
       >
-        <img src="/logo.svg" alt="codemathics" className="logo-svg" />
-      </a>
+        <Image src="/logo.svg" alt="codemathics" className="logo-svg" width={120} height={36} priority />
+      </Link>
 
       {/* nav links */}
       <div

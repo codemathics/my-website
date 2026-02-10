@@ -396,7 +396,7 @@ export default function CityModal({ city, onClose }: CityModalProps) {
     const ro = new ResizeObserver(compute);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [showContent, city, baseImages.length, imageDimensions]);
+  }, [showContent, city, baseImages, imageDimensions]);
 
   // set initial scroll offset to center the collage
   useEffect(() => {
@@ -426,9 +426,11 @@ export default function CityModal({ city, onClose }: CityModalProps) {
 
   // cleanup timers on unmount
   useEffect(() => {
+    const raf = rafRef;
+    const settle = settleTimeoutRef;
     return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      if (settleTimeoutRef.current) window.clearTimeout(settleTimeoutRef.current);
+      if (raf.current) cancelAnimationFrame(raf.current);
+      if (settle.current) window.clearTimeout(settle.current);
     };
   }, []);
 

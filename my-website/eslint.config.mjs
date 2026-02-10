@@ -20,6 +20,12 @@ const eslintConfig = [
       "next-env.d.ts",
     ],
   },
+  {
+    rules: {
+      // using external cloudinary urls — next/image would need a custom loader
+      "@next/next/no-img-element": "off",
+    },
+  },
 ];
 
 export default eslintConfig;
