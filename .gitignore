@@ -1,0 +1,5 @@
+# repo-level ignores
+.DS_Store
+
+# keep the second app folder out of commits for now
+/newWebsite/
