@@ -14,6 +14,7 @@ interface ProjectCardProps {
   primaryLottie?: object;
   secondaryImage?: ProjectImage;
   link?: string;
+  highlights?: string[];
 }
 
 export default function ProjectCard({
@@ -23,6 +24,7 @@ export default function ProjectCard({
   primaryLottie,
   secondaryImage,
   link,
+  highlights = [],
 }: ProjectCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -72,6 +74,16 @@ export default function ProjectCard({
         {/* description */}
         <div className="project-info">
           <p className="project-description">{description}</p>
+          {highlights.length > 0 && (
+            <div className="project-highlights">
+              {highlights.map((item) => (
+                <div key={item} className="project-highlight">
+                  <span className="project-highlight-icon" />
+                  <span className="project-highlight-text">{item}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* mockups */}
