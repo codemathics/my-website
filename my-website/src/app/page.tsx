@@ -15,13 +15,14 @@ const projects = [
   {
     name: "BLOCKRADAR",
     description:
-      "blockradar is a stablecoin wallet infrastructure for fintechs, enabling secure custody, settlement, and visibility across multi-chain payment flows.",
+      "blockradar is a stablecoin wallet infrastructure for fintechs, enabling secure custody,\nsettlement, and visibility across multi-chain payment flows.",
     primaryLottie: blockradarAnimation,
     secondaryImage: {
       src: "https://res.cloudinary.com/dhajah4xb/image/upload/v1770023759/verisync_k9thto.png",
       alt: "Next Project Preview",
     },
     link: "https://blockradar.io",
+    highlights: ["$350M+ processed volume post beta", "0→1 product + brand + interaction", "creative direction and motion design"],
   },
 ];
 
@@ -288,6 +289,7 @@ export default function Home() {
           primaryLottie={project.primaryLottie}
           secondaryImage={project.secondaryImage}
           link={project.link}
+          highlights={project.highlights}
         />
       ))}
 
