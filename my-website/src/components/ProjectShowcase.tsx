@@ -37,9 +37,9 @@ export default function ProjectShowcase({ projects }: ProjectShowcaseProps) {
   const displayIndexRef = useRef(0);
   const targetIndexRef = useRef(0);
   const isTransitioningRef = useRef(false);
-  const exitTimerRef = useRef<ReturnType<typeof setTimeout>>();
-  const cooldownTimerRef = useRef<ReturnType<typeof setTimeout>>();
-  const panelTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const exitTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const cooldownTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const panelTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const rafRef = useRef<number>(0);
 
   // entrance + reset: observe when the showcase enters/leaves viewport

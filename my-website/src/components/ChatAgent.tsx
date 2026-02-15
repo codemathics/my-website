@@ -179,7 +179,6 @@ export default function ChatAgent() {
               strokeLinejoin="round"
             />
           </svg>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             className="chat-bubble-emoji"
             src="/clement-emoji.png"
@@ -203,7 +202,6 @@ export default function ChatAgent() {
                 className={`chat-modal-status ${showContent ? "visible" : ""}`}
                 style={{ transitionDelay: "0.4s" }}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="/clement-emoji.png"
                   alt=""
@@ -251,7 +249,6 @@ export default function ChatAgent() {
                       <div className="chat-modal-message-meta">
                         {message.role === "assistant" && (
                           <>
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src="/clement-emoji.png"
                               alt=""
@@ -287,7 +284,6 @@ export default function ChatAgent() {
                     messages[messages.length - 1].role === "user" && (
                       <div className="chat-modal-message-group assistant">
                         <div className="chat-modal-message-meta">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src="/clement-emoji.png"
                             alt=""
