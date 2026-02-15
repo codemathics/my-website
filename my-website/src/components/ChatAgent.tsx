@@ -367,7 +367,7 @@ export default function ChatAgent() {
                     </div>
                   </form>
                   <span className="chat-modal-esc-hint">
-                    press <kbd>esc</kbd> to close chat
+                    press <kbd>enter</kbd> to send message, and<kbd>esc</kbd> to close chat.
                   </span>
                 </div>
               </div>
