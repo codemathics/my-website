@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Gochi_Hand } from "next/font/google";
+import ChatAgent from "@/components/ChatAgent";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -20,13 +21,13 @@ const gochiHand = Gochi_Hand({
 
 export const metadata: Metadata = {
   title: "clement hugbo — product designer & creative director",
-  description: "personal website of clement hugbo, product designer and creative director based in san francisco and dubai.",
+  description: "Clement is a product designer and creative director based in san francisco and dubai. passionate about creating visual stories and experiences that inspire and deliver measurable impact for businesses.",
   icons: {
     icon: "/icon.png",
   },
   openGraph: {
     title: "clement hugbo — product designer & creative director",
-    description: "personal website of clement hugbo, product designer and creative director based in san francisco and dubai.",
+    description: "Clement is a product designer and creative director based in san francisco and dubai. passionate about creating visual stories and experiences that inspire and deliver measurable impact for businesses.",
     images: [
       {
         url: "/og.png",
@@ -37,7 +38,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "clement hugbo — product designer & creative director",
-    description: "personal website of clement hugbo, product designer and creative director based in san francisco and dubai.",
+    description: "Clement is a product designer and creative director based in san francisco and dubai. passionate about creating visual stories and experiences that inspire and deliver measurable impact for businesses.",
     images: ["/og.png"],
   },
 };
@@ -53,6 +54,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${gochiHand.variable} antialiased`}
       >
         {children}
+        <ChatAgent />
       </body>
     </html>
   );

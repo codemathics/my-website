@@ -206,21 +206,20 @@
     rotate(var(--rs-rot, 0deg));
 }
 
-/* during drag — no transition smoothing */
+/* during drag — slight smoothing for weighted, physical feel */
 .city-modal-carousel.dragging .city-modal-random-track {
-  transition: transform 0ms linear;
+  transition: transform 60ms ease-out;
 }
 .city-modal-carousel.dragging .city-modal-random-item {
-  transition: opacity 0.6s ease, transform 0ms linear;
+  transition: opacity 0.6s ease, transform 60ms ease-out;
 }
 
-/* on release — playful settle with per-item delay */
-.city-modal-carousel.settling .city-modal-random-track {
-  transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+/* during rAF momentum — instant updates, animation is frame-driven */
+.city-modal-carousel.momentum .city-modal-random-track {
+  transition: transform 0ms linear;
 }
-.city-modal-carousel.settling .city-modal-random-item {
-  transition: opacity 0.6s ease,
-    transform var(--rs-settle-ms, 420ms) cubic-bezier(0.22, 1, 0.36, 1);
+.city-modal-carousel.momentum .city-modal-random-item {
+  transition: opacity 0.6s ease, transform 0ms linear;
 }
 
 .city-modal-random-item img {
