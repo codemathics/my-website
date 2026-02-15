@@ -6,23 +6,37 @@ import quoteAnimation from "../../quote.json";
 import sfAnimation from "../../public/sf.json";
 import uaeAnimation from "../../public/uae.json";
 import blockradarAnimation from "../../public/gateway.json";
-import ProjectCard from "@/components/ProjectCard";
+import ProjectShowcase, { ShowcaseProject } from "@/components/ProjectShowcase";
 import Navbar from "@/components/Navbar";
 import CityModal from "@/components/CityModal";
 
-// projects
-const projects = [
+// projects data — blockradar and verisync added for now; more sections to be added later
+const projects: ShowcaseProject[] = [
   {
     name: "BLOCKRADAR",
     description:
       "blockradar is a stablecoin wallet infrastructure for fintechs, enabling secure custody,\nsettlement, and visibility across multi-chain payment flows.",
     primaryLottie: blockradarAnimation,
-    secondaryImage: {
-      src: "https://res.cloudinary.com/dhajah4xb/image/upload/v1770023759/verisync_k9thto.png",
-      alt: "Next Project Preview",
-    },
     link: "https://blockradar.io",
-    highlights: ["$350M+ processed volume post beta", "0→1 product + brand + interaction", "creative direction and motion design"],
+    highlights: [
+      "$350M+ processed volume post beta",
+      "0→1 product + brand + interaction",
+      "creative direction and motion design",
+    ],
+  },
+  {
+    name: "VERISYNC",
+    description:
+      "verisync is an identity verification platform that streamlines kyc/aml compliance for fintechs and banks across emerging markets.",
+    primaryImage: {
+      src: "https://res.cloudinary.com/dhajah4xb/image/upload/v1770023759/verisync_k9thto.png",
+      alt: "Verisync dashboard",
+    },
+    highlights: [
+      "end-to-end design system",
+      "50% faster onboarding flow",
+      "brand identity + product design",
+    ],
   },
 ];
 
@@ -281,17 +295,7 @@ export default function Home() {
       </div>
 
       {/* projects */}
-      {projects.map((project) => (
-        <ProjectCard
-          key={project.name}
-          name={project.name}
-          description={project.description}
-          primaryLottie={project.primaryLottie}
-          secondaryImage={project.secondaryImage}
-          link={project.link}
-          highlights={project.highlights}
-        />
-      ))}
+      <ProjectShowcase projects={projects} />
 
       {/* city modal */}
       <CityModal

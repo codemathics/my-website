@@ -123,12 +123,11 @@ export default function CityModal({ city, onClose }: CityModalProps) {
   const dragStartYRef = useRef(0);
   const dragStartOffsetXRef = useRef(0);
   const dragStartOffsetYRef = useRef(0);
-  const rafRef = useRef<number | null>(null);
-  const settleTimeoutRef = useRef<number | null>(null);
+  const momentumRafRef = useRef<number | null>(null);
 
-  // velocity tracking for momentum
-  const lastMoveRef = useRef<{ x: number; y: number; t: number } | null>(null);
+  // velocity tracking — exponential moving average for smooth values
   const velocityRef = useRef<{ vx: number; vy: number }>({ vx: 0, vy: 0 });
+  const lastMoveRef = useRef<{ x: number; y: number; t: number } | null>(null);
 
   // drag-me cursor indicator
   const [dragIndicator, setDragIndicator] = useState<{
@@ -423,13 +422,11 @@ export default function CityModal({ city, onClose }: CityModalProps) {
     };
   }, [showContent, randomShot]);
 
-  // cleanup timers on unmount
+  // cleanup momentum animation on unmount
   useEffect(() => {
-    const raf = rafRef;
-    const settle = settleTimeoutRef;
+    const raf = momentumRafRef;
     return () => {
       if (raf.current) cancelAnimationFrame(raf.current);
-      if (settle.current) window.clearTimeout(settle.current);
     };
   }, []);
 
@@ -450,11 +447,59 @@ export default function CityModal({ city, onClose }: CityModalProps) {
     carouselEl.style.setProperty("--rs-offset-y", `${offsetYRef.current}`);
   };
 
+  // stop any running momentum animation
+  const stopMomentum = () => {
+    if (momentumRafRef.current) {
+      cancelAnimationFrame(momentumRafRef.current);
+      momentumRafRef.current = null;
+    }
+    carouselRef.current?.classList.remove("momentum");
+  };
+
+  // rAF-based momentum — smooth exponential deceleration
+  const startMomentum = () => {
+    const el = carouselRef.current;
+    if (!el) return;
+
+    el.classList.add("momentum");
+
+    let { vx, vy } = velocityRef.current;
+    const friction = 0.955;
+    const minSpeed = 0.005;
+
+    const step = () => {
+      vx *= friction;
+      vy *= friction;
+
+      // stop when both axes are barely moving
+      if (Math.abs(vx) < minSpeed && Math.abs(vy) < minSpeed) {
+        el.classList.remove("momentum");
+        momentumRafRef.current = null;
+        return;
+      }
+
+      // velocity is in px/ms, each frame is ~16ms
+      applyOffset(
+        offsetXRef.current - vx * 16,
+        offsetYRef.current - vy * 16
+      );
+
+      momentumRafRef.current = requestAnimationFrame(step);
+    };
+
+    momentumRafRef.current = requestAnimationFrame(step);
+  };
+
   const onCanvasPointerDown: React.PointerEventHandler<HTMLDivElement> = (e) => {
     if (!randomShot || e.button !== 0) return;
     const el = carouselRef.current;
     if (!el) return;
 
+    // kill any running momentum immediately
+    stopMomentum();
+
+    // apply dragging class directly to DOM — no React batching delay
+    el.classList.add("dragging");
     isDraggingRef.current = true;
     setIsDragging(true);
     setDragIndicator((p) => ({ ...p, visible: true, x: e.clientX, y: e.clientY }));
@@ -477,43 +522,41 @@ export default function CityModal({ city, onClose }: CityModalProps) {
     const dy = e.clientY - dragStartYRef.current;
     applyOffset(dragStartOffsetXRef.current - dx, dragStartOffsetYRef.current - dy);
 
-    // track velocity for momentum on release
+    // track velocity with exponential smoothing for stable values
     const now = performance.now();
     const last = lastMoveRef.current;
     if (last) {
-      const dt = Math.max(16, now - last.t);
+      const dt = Math.max(1, now - last.t);
+      const instantVx = (e.clientX - last.x) / dt;
+      const instantVy = (e.clientY - last.y) / dt;
+
+      // blend 30% new, 70% old — prevents spiky velocity on slow frames
+      const blend = 0.3;
       velocityRef.current = {
-        vx: (e.clientX - last.x) / dt,
-        vy: (e.clientY - last.y) / dt,
+        vx: velocityRef.current.vx * (1 - blend) + instantVx * blend,
+        vy: velocityRef.current.vy * (1 - blend) + instantVy * blend,
       };
-      lastMoveRef.current = { x: e.clientX, y: e.clientY, t: now };
     }
+    lastMoveRef.current = { x: e.clientX, y: e.clientY, t: now };
   };
 
   const endDrag = (e: React.PointerEvent<HTMLDivElement>) => {
     if (dragPointerIdRef.current !== e.pointerId) return;
+
     isDraggingRef.current = false;
     setIsDragging(false);
     dragPointerIdRef.current = null;
 
-    // momentum throw
-    const rs = randomShot;
-    if (!rs) return;
-    const { vx, vy } = velocityRef.current;
-    const throwFactor = 480;
-    applyOffset(
-      offsetXRef.current - vx * throwFactor,
-      offsetYRef.current - vy * throwFactor
-    );
-
-    // css settle animation
+    // remove dragging class from DOM directly
     const el = carouselRef.current;
-    if (el) {
-      el.classList.add("settling");
-      if (settleTimeoutRef.current) window.clearTimeout(settleTimeoutRef.current);
-      settleTimeoutRef.current = window.setTimeout(() => {
-        el.classList.remove("settling");
-      }, 850);
+    if (el) el.classList.remove("dragging");
+
+    // start smooth rAF-based momentum deceleration
+    const { vx, vy } = velocityRef.current;
+    const speed = Math.sqrt(vx * vx + vy * vy);
+
+    if (speed > 0.02) {
+      startMomentum();
     }
   };
 
@@ -572,7 +615,7 @@ export default function CityModal({ city, onClose }: CityModalProps) {
           {/* image collage canvas */}
           <div
             ref={carouselRef}
-            className={`city-modal-carousel ${showContent ? "visible" : ""} ${isDragging ? "dragging" : ""}`}
+            className={`city-modal-carousel ${showContent ? "visible" : ""}`}
             onPointerDown={onCanvasPointerDown}
             onPointerMove={(e) => {
               // hide drag indicator over close button
@@ -644,7 +687,6 @@ export default function CityModal({ city, onClose }: CityModalProps) {
                           height: `${it.heightPx}px`,
                           zIndex: it.zIndex,
                           ["--rs-rot" as string]: `${it.rotateDeg}deg`,
-                          ["--rs-settle-ms" as string]: `${240 + it.zIndex * 90}ms`,
                           ["--rs-parallax" as string]: `${it.parallax}`,
                           transitionDelay: `${(idx % 10) * 0.04 + 0.35}s`,
                         }}
