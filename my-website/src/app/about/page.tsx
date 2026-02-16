@@ -33,10 +33,12 @@ export default function AboutPage() {
                   <p>
                     i&apos;m a senior product designer and multi-disciplinary creative. i ship products in ai, stablecoins, web3, fintech, saas, and anything that makes people&apos;s lives easier.
                     i care about ux, brand, and the little motion details that make things feel alive.
+                  </p>
+                  <p>
                     over the years i&apos;ve served as a principal product designer, staff designer, design manager, founder, and head of design across multiple ventures. with a foundation in software engineering, i bring end-to-end understanding of the product lifecycle and thrive in cross-functional teams, working closely with founders, engineers, product managers, and stakeholders to ship meaningful solutions.
                   </p>
                   <p>
-                    i used to feel uncomfortable building in public 🤤, i have built and still building side projects, small tools, and experiments
+                    i used to feel uncomfortable building in public 🤤, well not anymore. i have built and still building side projects, small tools, and experiments
                     across stablecoin, infrastructure, ai-assisted workflows and automations, plugins and storytelling through films, camera and lenses.
                   </p>
                   <p>
