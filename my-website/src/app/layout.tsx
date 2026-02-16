@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Gochi_Hand } from "next/font/google";
 import ChatAgent from "@/components/ChatAgent";
 import ClarityScript from "@/components/ClarityScript";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -57,6 +58,7 @@ export default function RootLayout({
         {children}
         <ChatAgent />
         <ClarityScript />
+        <GoogleAnalytics />
       </body>
     </html>
   );
