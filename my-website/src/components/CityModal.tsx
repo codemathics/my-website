@@ -571,7 +571,7 @@ export default function CityModal({ city, onClose }: CityModalProps) {
             {content.description}
           </p>
 
-          {/* image collage canvas */}
+          {/* image collage canvas — blur layer (edges) + sharp layer (center) for focus effect */}
           <div
             ref={carouselRef}
             className={`city-modal-carousel ${showContent ? "visible" : ""}`}
@@ -620,42 +620,84 @@ export default function CityModal({ city, onClose }: CityModalProps) {
                 setDragIndicator((p) => ({ ...p, visible: false }));
             }}
           >
-            <div
-              ref={trackRef}
-              className="city-modal-random-track"
-              style={{
-                width: randomShot
-                  ? `${randomShot.segmentWidthPx}px`
-                  : undefined,
-                height: randomShot
-                  ? `${randomShot.segmentHeightPx}px`
-                  : undefined,
-              }}
-            >
-              {randomShot &&
-                randomShot.items.map((it, idx) => (
-                  <div
-                    key={`${idx}-${it.src}`}
-                    className={`city-modal-random-item ${showContent ? "visible" : ""}`}
-                    style={{
-                      left: `${it.leftPx}px`,
-                      top: `${it.topPx}px`,
-                      width: `${it.widthPx}px`,
-                      height: `${it.heightPx}px`,
-                      zIndex: it.zIndex,
-                      ["--rs-rot" as string]: `${it.rotateDeg}deg`,
-                      ["--rs-parallax" as string]: `${it.parallax}`,
-                      transitionDelay: `${(idx % 10) * 0.04 + 0.35}s`,
-                    }}
-                  >
-                    <img
-                      src={it.src}
-                      alt={`${city} moment ${idx + 1}`}
-                      draggable={false}
-                      onDragStart={(ev) => ev.preventDefault()}
-                    />
-                  </div>
-                ))}
+            {/* blurred full canvas — visible at edges */}
+            <div className="city-modal-carousel-blur" aria-hidden="true">
+              <div
+                ref={trackRef}
+                className="city-modal-random-track"
+                style={{
+                  width: randomShot
+                    ? `${randomShot.segmentWidthPx}px`
+                    : undefined,
+                  height: randomShot
+                    ? `${randomShot.segmentHeightPx}px`
+                    : undefined,
+                }}
+              >
+                {randomShot &&
+                  randomShot.items.map((it, idx) => (
+                    <div
+                      key={`blur-${idx}-${it.src}`}
+                      className={`city-modal-random-item ${showContent ? "visible" : ""}`}
+                      style={{
+                        left: `${it.leftPx}px`,
+                        top: `${it.topPx}px`,
+                        width: `${it.widthPx}px`,
+                        height: `${it.heightPx}px`,
+                        zIndex: it.zIndex,
+                        ["--rs-rot" as string]: `${it.rotateDeg}deg`,
+                        ["--rs-parallax" as string]: `${it.parallax}`,
+                        transitionDelay: `${(idx % 10) * 0.04 + 0.35}s`,
+                      }}
+                    >
+                      <img
+                        src={it.src}
+                        alt=""
+                        draggable={false}
+                        onDragStart={(ev) => ev.preventDefault()}
+                      />
+                    </div>
+                  ))}
+              </div>
+            </div>
+            {/* sharp center only — radial mask so center is in focus */}
+            <div className="city-modal-carousel-sharp" aria-hidden="true">
+              <div
+                className="city-modal-random-track"
+                style={{
+                  width: randomShot
+                    ? `${randomShot.segmentWidthPx}px`
+                    : undefined,
+                  height: randomShot
+                    ? `${randomShot.segmentHeightPx}px`
+                    : undefined,
+                }}
+              >
+                {randomShot &&
+                  randomShot.items.map((it, idx) => (
+                    <div
+                      key={`sharp-${idx}-${it.src}`}
+                      className={`city-modal-random-item ${showContent ? "visible" : ""}`}
+                      style={{
+                        left: `${it.leftPx}px`,
+                        top: `${it.topPx}px`,
+                        width: `${it.widthPx}px`,
+                        height: `${it.heightPx}px`,
+                        zIndex: it.zIndex,
+                        ["--rs-rot" as string]: `${it.rotateDeg}deg`,
+                        ["--rs-parallax" as string]: `${it.parallax}`,
+                        transitionDelay: `${(idx % 10) * 0.04 + 0.35}s`,
+                      }}
+                    >
+                      <img
+                        src={it.src}
+                        alt={`${city} moment ${idx + 1}`}
+                        draggable={false}
+                        onDragStart={(ev) => ev.preventDefault()}
+                      />
+                    </div>
+                  ))}
+              </div>
             </div>
           </div>
 
