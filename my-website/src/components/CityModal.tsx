@@ -33,16 +33,18 @@ const sfContent = {
   ],
 };
 
-// dubai content
+// dubai content — images from public/dubai
+const dubaiImageFiles = [
+  "1.png", "1a.png", "1b.png", "2.png", "3.png", "4.png", "5.png", "6.png",
+  "7.png", "8.png", "9.png", "10.png", "11.png", "12.png", "13.png", "14.png",
+  "15.png", "16.png", "18.png", "19.png", "20.png", "21.png", "22.png", "23.png",
+  "24.png", "25.png", "26.png", "27.png", "28.png", "29.png", "30.png", "31.png",
+  "32.png",
+];
 const dubaiContent = {
   title: ["habibi,", "welcome", "to", "dubai 😎"],
-  description: "this page is still under construction 🚧, bear with me! 😭",
-  images: [
-    "https://res.cloudinary.com/dhajah4xb/image/upload/v1738355118/IMG_7869_f1ddrm.jpg",
-    "https://res.cloudinary.com/dhajah4xb/image/upload/v1738355118/IMG_7784_j6d0w4.jpg",
-    "https://res.cloudinary.com/dhajah4xb/image/upload/v1738355117/IMG_7695_tpyquh.jpg",
-    "https://res.cloudinary.com/dhajah4xb/image/upload/v1738355116/IMG_6936_h1szrb.jpg",
-  ],
+  description: "my collage of me in dubai",
+  images: dubaiImageFiles.map((file) => `/dubai/${file}`),
 };
 
 // ─── types ───────────────────────────────────────────────
@@ -68,6 +70,8 @@ type RandomShotItem = {
 type RandomShotLayout = {
   segmentWidthPx: number;
   segmentHeightPx: number;
+  viewportW: number;
+  viewportH: number;
   items: RandomShotItem[];
 };
 
@@ -282,7 +286,7 @@ export default function CityModal({ city, onClose }: CityModalProps) {
     };
   }, [showContent, city]);
 
-  // compute collage layout from preloaded image dimensions
+  // compute masonry layout (Figma-style: columns, 8px gap, no overlap; wider & taller than viewport so drag works both ways)
   useLayoutEffect(() => {
     if (!showContent) return;
     if (imageDimensions.length === 0) return;
@@ -295,82 +299,44 @@ export default function CityModal({ city, onClose }: CityModalProps) {
       const viewportH = el.clientHeight;
       if (!viewportW || !viewportH) return;
 
-      const seed = city === "dubai" ? 0x0d0b0a1 : 0x51f0c0;
-      const rand = seededRng(seed);
+      const gap = 8;
+      const paddingH = 24;
+      const paddingV = 24;
+      // content larger than viewport so user can drag in all directions
+      const segmentWidthPx = Math.max(viewportW * 1.8, viewportW + 400);
+      const segmentHeightPx = Math.max(viewportH * 1.8, viewportH + 400);
+      const columnCount = viewportW < 768 ? 3 : 5;
+      const totalGapW = gap * (columnCount - 1);
+      const columnWidth =
+        (segmentWidthPx - paddingH * 2 - totalGapW) / columnCount;
 
-      // shuffle indices so the same photo doesn't repeat back-to-back
-      const numCycles = Math.max(4, Math.ceil(24 / baseImages.length));
-      const shuffledIndices: number[] = [];
-
-      for (let cycle = 0; cycle < numCycles; cycle++) {
-        const cycleIndices = Array.from(
-          { length: baseImages.length },
-          (_, i) => i
-        );
-        // fisher-yates shuffle
-        for (let j = cycleIndices.length - 1; j > 0; j--) {
-          const k = Math.floor(rand() * (j + 1));
-          [cycleIndices[j], cycleIndices[k]] = [cycleIndices[k], cycleIndices[j]];
-        }
-        shuffledIndices.push(...cycleIndices);
+      // build enough image indices to fill the wider and taller area
+      const minItems = columnCount * 18;
+      const indices: number[] = [];
+      for (let i = 0; i < minItems; i++) {
+        indices.push(i % baseImages.length);
       }
 
-      const count = shuffledIndices.length;
-      const baseStep = Math.max(240, viewportW * 0.2);
+      const columnTops: number[] = Array.from(
+        { length: columnCount },
+        () => paddingV
+      );
       const items: RandomShotItem[] = [];
 
-      const estimatedSegmentWidth = count * baseStep;
-      const centerClusterX = estimatedSegmentWidth * 0.4;
-
-      for (let i = 0; i < count; i++) {
-        const imgIdx = shuffledIndices[i];
+      for (let i = 0; i < indices.length; i++) {
+        const imgIdx = indices[i];
         const src = baseImages[imgIdx];
         const imgDim = imageDimensions[imgIdx];
-        const naturalAspect = imgDim?.aspect ?? 1;
+        const aspect = imgDim?.aspect ?? 1;
 
-        // varied sizes — small, medium, large
-        const sizeRoll = rand();
-        let w: number;
-        if (sizeRoll < 0.25) {
-          w = 180 + rand() * 120;
-        } else if (sizeRoll < 0.6) {
-          w = 300 + rand() * 180;
-        } else {
-          w = 420 + rand() * 200;
-        }
+        const w = columnWidth;
+        const h = columnWidth / aspect;
 
-        let h = w * naturalAspect;
-        const maxH = viewportH * 0.92;
-        if (h > maxH) h = maxH;
+        const col = columnTops.indexOf(Math.min(...columnTops));
+        const leftPx = paddingH + col * (columnWidth + gap);
+        const topPx = columnTops[col];
 
-        // horizontal position with overlap variance
-        let leftPx = i * baseStep + (rand() - 0.3) * (baseStep * 0.7);
-
-        // pull some images toward center for density
-        if (rand() < 0.35) {
-          const pullStrength = 0.3 + rand() * 0.4;
-          leftPx = leftPx + (centerClusterX - leftPx) * pullStrength;
-        }
-
-        // vertical position biased toward center (gaussian-ish)
-        const centerY = (viewportH - h) / 2;
-        const spread = (viewportH - h) * 0.35;
-        const gaussianBias = (rand() + rand() + rand()) / 3;
-        const topPx = Math.max(
-          0,
-          Math.min(viewportH - h, centerY + (gaussianBias - 0.5) * spread * 2)
-        );
-
-        const rotateDeg = (rand() * 2 - 1) * 1.8;
-        const zIndex = 1 + Math.floor(rand() * 4);
-        const parallax =
-          zIndex === 1
-            ? 0.25
-            : zIndex === 2
-              ? 0.12
-              : zIndex === 3
-                ? -0.08
-                : -0.18;
+        columnTops[col] += h + gap;
 
         items.push({
           src,
@@ -378,16 +344,23 @@ export default function CityModal({ city, onClose }: CityModalProps) {
           topPx,
           widthPx: w,
           heightPx: h,
-          rotateDeg,
-          zIndex,
-          parallax,
+          rotateDeg: 0,
+          zIndex: 1,
+          parallax: 0,
         });
       }
 
-      const last = items[items.length - 1];
-      const segmentWidthPx = last.leftPx + last.widthPx + baseStep;
-      const segmentHeightPx = viewportH;
-      setRandomShot({ segmentWidthPx, segmentHeightPx, items });
+      const finalSegmentHeightPx = Math.max(
+        segmentHeightPx,
+        Math.max(...columnTops) - gap + paddingV
+      );
+      setRandomShot({
+        segmentWidthPx,
+        segmentHeightPx: finalSegmentHeightPx,
+        viewportW,
+        viewportH,
+        items,
+      });
     };
 
     compute();
@@ -396,25 +369,22 @@ export default function CityModal({ city, onClose }: CityModalProps) {
     return () => ro.disconnect();
   }, [showContent, city, baseImages, imageDimensions]);
 
-  // set initial scroll offset to center the collage
+  // set initial scroll offset to top-left of masonry
   useEffect(() => {
     if (!showContent) return;
     const carouselEl = carouselRef.current;
     if (!carouselEl || !randomShot || randomShot.segmentWidthPx <= 0) return;
 
-    const segmentWidth = randomShot.segmentWidthPx;
-    const segmentHeight = randomShot.segmentHeightPx;
-
-    const jumpToMiddle = () => {
-      offsetXRef.current = segmentWidth * 0.4;
-      offsetYRef.current = segmentHeight * 0.5;
+    const jumpToStart = () => {
+      offsetXRef.current = 0;
+      offsetYRef.current = 0;
       carouselEl.style.setProperty("--rs-offset-x", `${offsetXRef.current}`);
       carouselEl.style.setProperty("--rs-offset-y", `${offsetYRef.current}`);
     };
 
-    jumpToMiddle();
-    const raf = requestAnimationFrame(jumpToMiddle);
-    const t = window.setTimeout(jumpToMiddle, 250);
+    jumpToStart();
+    const raf = requestAnimationFrame(jumpToStart);
+    const t = window.setTimeout(jumpToStart, 250);
 
     return () => {
       cancelAnimationFrame(raf);
@@ -436,12 +406,14 @@ export default function CityModal({ city, onClose }: CityModalProps) {
     const carouselEl = carouselRef.current;
     const rs = randomShot;
     if (!carouselEl || !rs) return;
-    const { segmentWidthPx: sw, segmentHeightPx: sh } = rs;
+    const { segmentWidthPx: sw, segmentHeightPx: sh, viewportW: vw, viewportH: vh } = rs;
     if (!sw || !sh) return;
 
-    // keep offsets within [segment, 2×segment) for seamless tiling
-    offsetXRef.current = ((nextOffsetX % sw) + sw) % sw + sw;
-    offsetYRef.current = ((nextOffsetY % sh) + sh) % sh + sh;
+    // clamp to content bounds (masonry: single tile, no wrap)
+    const maxX = Math.max(0, sw - vw);
+    const maxY = Math.max(0, sh - vh);
+    offsetXRef.current = Math.max(0, Math.min(maxX, nextOffsetX));
+    offsetYRef.current = Math.max(0, Math.min(maxY, nextOffsetY));
 
     carouselEl.style.setProperty("--rs-offset-x", `${offsetXRef.current}`);
     carouselEl.style.setProperty("--rs-offset-y", `${offsetYRef.current}`);
@@ -666,41 +638,37 @@ export default function CityModal({ city, onClose }: CityModalProps) {
               className="city-modal-random-track"
               style={{
                 width: randomShot
-                  ? `${randomShot.segmentWidthPx * 3}px`
+                  ? `${randomShot.segmentWidthPx}px`
                   : undefined,
                 height: randomShot
-                  ? `${randomShot.segmentHeightPx * 3}px`
+                  ? `${randomShot.segmentHeightPx}px`
                   : undefined,
               }}
             >
               {randomShot &&
-                [0, 1, 2].flatMap((segX) =>
-                  [0, 1, 2].map((segY) =>
-                    randomShot.items.map((it, idx) => (
-                      <div
-                        key={`${segX}-${segY}-${idx}-${it.src}`}
-                        className={`city-modal-random-item ${showContent ? "visible" : ""}`}
-                        style={{
-                          left: `${it.leftPx + segX * randomShot.segmentWidthPx}px`,
-                          top: `${it.topPx + segY * randomShot.segmentHeightPx}px`,
-                          width: `${it.widthPx}px`,
-                          height: `${it.heightPx}px`,
-                          zIndex: it.zIndex,
-                          ["--rs-rot" as string]: `${it.rotateDeg}deg`,
-                          ["--rs-parallax" as string]: `${it.parallax}`,
-                          transitionDelay: `${(idx % 10) * 0.04 + 0.35}s`,
-                        }}
-                      >
-                        <img
-                          src={it.src}
-                          alt={`${city} moment ${idx + 1}`}
-                          draggable={false}
-                          onDragStart={(ev) => ev.preventDefault()}
-                        />
-                      </div>
-                    ))
-                  )
-                )}
+                randomShot.items.map((it, idx) => (
+                  <div
+                    key={`${idx}-${it.src}`}
+                    className={`city-modal-random-item ${showContent ? "visible" : ""}`}
+                    style={{
+                      left: `${it.leftPx}px`,
+                      top: `${it.topPx}px`,
+                      width: `${it.widthPx}px`,
+                      height: `${it.heightPx}px`,
+                      zIndex: it.zIndex,
+                      ["--rs-rot" as string]: `${it.rotateDeg}deg`,
+                      ["--rs-parallax" as string]: `${it.parallax}`,
+                      transitionDelay: `${(idx % 10) * 0.04 + 0.35}s`,
+                    }}
+                  >
+                    <img
+                      src={it.src}
+                      alt={`${city} moment ${idx + 1}`}
+                      draggable={false}
+                      onDragStart={(ev) => ev.preventDefault()}
+                    />
+                  </div>
+                ))}
             </div>
           </div>
 

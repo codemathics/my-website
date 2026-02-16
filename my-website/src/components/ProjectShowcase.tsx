@@ -21,7 +21,7 @@ interface ProjectShowcaseProps {
   projects: ShowcaseProject[];
 }
 
-export default function ProjectShowcase({ projects }: ProjectShowcaseProps) {
+function ProjectShowcase({ projects }: ProjectShowcaseProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const stickyRef = useRef<HTMLDivElement>(null);
   const count = projects.length;
@@ -32,6 +32,11 @@ export default function ProjectShowcase({ projects }: ProjectShowcaseProps) {
   const [contentVisible, setContentVisible] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
   const [direction, setDirection] = useState<"up" | "down">("up");
+  const [clickIndicator, setClickIndicator] = useState<{
+    visible: boolean;
+    x: number;
+    y: number;
+  }>({ visible: false, x: 0, y: 0 });
 
   // refs for transition control
   const displayIndexRef = useRef(0);
@@ -63,6 +68,7 @@ export default function ProjectShowcase({ projects }: ProjectShowcaseProps) {
           setIsExiting(false);
           setDisplayIndex(0);
           setDirection("up");
+          setClickIndicator((p) => ({ ...p, visible: false }));
 
           displayIndexRef.current = 0;
           targetIndexRef.current = 0;
@@ -75,6 +81,11 @@ export default function ProjectShowcase({ projects }: ProjectShowcaseProps) {
     if (el) observer.observe(el);
     return () => observer.disconnect();
   }, []);
+
+  // hide custom click cursor when the displayed project changes (so it doesn’t stick or show on wrong section)
+  useEffect(() => {
+    setClickIndicator((p) => ({ ...p, visible: false }));
+  }, [displayIndex]);
 
   // trigger a project transition
   const triggerTransition = useCallback((targetIdx: number) => {
@@ -206,6 +217,35 @@ export default function ProjectShowcase({ projects }: ProjectShowcaseProps) {
   const nextProject =
     displayIndex < count - 1 ? projects[displayIndex + 1] : null;
 
+  // preload BLOCKRADAR Lottie once with a robust fallback path
+  const [gatewayLottie, setGatewayLottie] = useState<object | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadGatewayLottie = async () => {
+      try {
+        const mod = await import("../../public/gateway.json");
+        if (!cancelled) setGatewayLottie(mod.default);
+        return;
+      } catch {
+        // fallback: fetch from /public in case module import is unavailable
+      }
+
+      try {
+        const res = await fetch("/gateway.json");
+        const data = await res.json();
+        if (!cancelled) setGatewayLottie(data);
+      } catch {
+        // keep showcase usable even if Lottie fails to load
+      }
+    };
+
+    loadGatewayLottie();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   // build class list
   const stickyClasses = [
     "project-showcase-sticky",
@@ -217,12 +257,13 @@ export default function ProjectShowcase({ projects }: ProjectShowcaseProps) {
     .filter(Boolean)
     .join(" ");
 
-  // render a visual (lottie or image)
-  const renderVisual = (p: ShowcaseProject, className: string) => {
-    if (p.primaryLottie) {
+  // render a visual (lottie or image); BLOCKRADAR uses lazy-loaded gatewayLottie
+  const renderVisual = (p: ShowcaseProject, className: string, isCurrent = false) => {
+    const lottieData = p.primaryLottie ?? (isCurrent && displayIndex === 0 ? gatewayLottie : null);
+    if (lottieData) {
       return (
         <div className={`${className} showcase-lottie`}>
-          <Lottie animationData={p.primaryLottie} loop autoplay />
+          <Lottie animationData={lottieData} loop autoplay />
         </div>
       );
     }
@@ -236,6 +277,16 @@ export default function ProjectShowcase({ projects }: ProjectShowcaseProps) {
       );
     }
     return null;
+  };
+
+  // only treat hover as "over title letters" when target is inside the link or is a .showcase-letter (no-link case)
+  const isOverTitleLetters = (e: React.PointerEvent) => {
+    const area = e.currentTarget;
+    const first = area.firstElementChild;
+    if (!first) return false;
+    const target = e.target as Node;
+    if (first.tagName === "A") return first.contains(target);
+    return (e.target as Element).classList?.contains("showcase-letter") ?? false;
   };
 
   return (
@@ -268,7 +319,7 @@ export default function ProjectShowcase({ projects }: ProjectShowcaseProps) {
           <div className="showcase-mockup-stack">
             {/* primary */}
             <div className="showcase-primary-wrap">
-              {renderVisual(project, "showcase-img-primary")}
+              {renderVisual(project, "showcase-img-primary", true)}
             </div>
 
             {/* secondary (next project preview, blurred) */}
@@ -280,8 +331,24 @@ export default function ProjectShowcase({ projects }: ProjectShowcaseProps) {
           </div>
         </div>
 
-        {/* title — each letter animates individually */}
-        <div className="showcase-title-area">
+        {/* title — custom cursor only when hovering the letters inside .showcase-title-area; anchors remain clickable */}
+        <div
+          className={`showcase-title-area ${clickIndicator.visible ? "showcase-title-area-cursor-active" : ""}`}
+          onPointerEnter={(e) => {
+            if (!isOverTitleLetters(e)) return;
+            setClickIndicator({ visible: true, x: e.clientX, y: e.clientY });
+          }}
+          onPointerLeave={() =>
+            setClickIndicator((p) => ({ ...p, visible: false }))
+          }
+          onPointerMove={(e) => {
+            if (isOverTitleLetters(e)) {
+              setClickIndicator((p) => ({ ...p, x: e.clientX, y: e.clientY, visible: true }));
+            } else {
+              setClickIndicator((p) => ({ ...p, visible: false }));
+            }
+          }}
+        >
           {project.link ? (
             <a href={project.link} target="_blank" rel="noopener noreferrer">
               {project.name.split("").map((letter, i) => (
@@ -295,18 +362,40 @@ export default function ProjectShowcase({ projects }: ProjectShowcaseProps) {
               ))}
             </a>
           ) : (
-            project.name.split("").map((letter, i) => (
-              <span
-                key={`${displayIndex}-${i}`}
-                className="showcase-letter"
-                style={{ transitionDelay: `${0.18 + i * 0.03}s` }}
-              >
-                {letter}
-              </span>
-            ))
+            <>
+              {project.name.split("").map((letter, i) => (
+                <span
+                  key={`${displayIndex}-${i}`}
+                  className="showcase-letter"
+                  style={{ transitionDelay: `${0.18 + i * 0.03}s` }}
+                >
+                  {letter}
+                </span>
+              ))}
+            </>
           )}
+        </div>
+
+        {/* click cursor — follows pointer over project title (Figma design) */}
+        <div
+          className={`showcase-click-cursor ${clickIndicator.visible ? "visible" : ""}`}
+          style={{
+            left: clickIndicator.x,
+            top: clickIndicator.y,
+          }}
+          aria-hidden="true"
+        >
+          <img
+            src="/click-icon.svg"
+            alt=""
+            width={116}
+            height={116}
+            className="showcase-click-cursor-icon"
+          />
         </div>
       </div>
     </div>
   );
 }
+
+export default React.memo(ProjectShowcase);

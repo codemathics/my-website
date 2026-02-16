@@ -139,6 +139,7 @@
 .city-modal-description.visible {
   opacity: 1;
   transform: translateY(0);
+  color: #fff;
 }
 
 /* ─── image carousel / collage ───────────────────────── */
