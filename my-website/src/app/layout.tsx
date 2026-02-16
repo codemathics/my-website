@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import { Geist, Geist_Mono, Gochi_Hand } from "next/font/google";
 import ChatAgent from "@/components/ChatAgent";
+import ClarityScript from "@/components/ClarityScript";
 import "./globals.css";
-
-const clarityProjectId = process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID;
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -58,21 +56,7 @@ export default function RootLayout({
       >
         {children}
         <ChatAgent />
-        {clarityProjectId && (
-          <Script
-            id="clarity-init"
-            strategy="afterInteractive"
-            dangerouslySetInnerHTML={{
-              __html: `
-                (function(c,l,a,r,i,t,y){
-                  c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-                  t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-                  y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-                })(window, document, "clarity", "script", "${clarityProjectId}");
-              `,
-            }}
-          />
-        )}
+        <ClarityScript />
       </body>
     </html>
   );
