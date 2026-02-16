@@ -160,6 +160,44 @@
   user-select: none;
 }
 
+/* blur layer — full canvas slightly blurred so edges are out of focus */
+.city-modal-carousel-blur {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  filter: blur(10px);
+  transform: scale(1.06);
+}
+
+/* sharp layer — radial mask so center is in focus, feathered blend to blur */
+.city-modal-carousel-sharp {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  mask-image: radial-gradient(
+    ellipse 62% 62% at 50% 50%,
+    black 0%,
+    black 22%,
+    rgba(0, 0, 0, 0.85) 38%,
+    rgba(0, 0, 0, 0.5) 52%,
+    rgba(0, 0, 0, 0.2) 65%,
+    transparent 78%
+  );
+  mask-mode: alpha;
+  -webkit-mask-image: radial-gradient(
+    ellipse 62% 62% at 50% 50%,
+    black 0%,
+    black 22%,
+    rgba(0, 0, 0, 0.85) 38%,
+    rgba(0, 0, 0, 0.5) 52%,
+    rgba(0, 0, 0, 0.2) 65%,
+    transparent 78%
+  );
+  -webkit-mask-mode: alpha;
+}
+
 /* collage track — translates via css custom properties */
 .city-modal-random-track {
   position: relative;

@@ -197,15 +197,17 @@ export default function Home() {
         }}
       >
         {/* headshot with spotlight mask (mask position updated in RAF, not React) */}
-        <img
-          ref={heroRef}
-          src="https://res.cloudinary.com/dhajah4xb/image/upload/v1758094446/headShot1_buzn8d.png"
-          className={`absolute inset-0 h-full w-full ${isMobile ? "mobile-image" : "object-contain"} ${hasEntered ? "fade-up-enter-active" : "fade-up-enter"} hero-image`}
-          alt="headshot"
-          style={heroImageStyle}
-          loading="eager"
-          fetchPriority="high"
-        />
+        <div className="hero-image-wrap">
+          <img
+            ref={heroRef}
+            src="https://res.cloudinary.com/dhajah4xb/image/upload/v1758094446/headShot1_buzn8d.png"
+            className={`absolute inset-0 h-full w-full ${isMobile ? "mobile-image" : "object-contain"} hero-image`}
+            alt="headshot"
+            style={heroImageStyle}
+            loading="eager"
+            fetchPriority="high"
+          />
+        </div>
 
         {/* content overlay */}
         <div
