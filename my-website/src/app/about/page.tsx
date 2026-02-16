@@ -40,7 +40,7 @@ export default function AboutPage() {
                     across stablecoin, infrastructure, ai-assisted workflows and automations, plugins and storytelling through films, camera and lenses.
                   </p>
                   <p>
-                    i enjoy collaborating with ai, it's now one of my super powers. helps me focus on the big picture and get things done faster. it broadens my sharp thinking skills and provides tighter execution. when
+                    i enjoy collaborating with ai, it&apos;s now one of my super powers. helps me focus on the big picture and get things done faster. it broadens my sharp thinking skills and provides tighter execution. when
                     it&apos;s wrong /which happens occasionally 😎/, i go hands-on with the code and iterate until it&apos;s right.
                   </p>
                   <p>
