@@ -4,10 +4,51 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 
+// linkify: [anchor](url) → clickable word; raw URLs/paths still supported as fallback
+function linkifyText(text: string): React.ReactNode {
+  if (!text) return null;
+  const parts: React.ReactNode[] = [];
+  // match markdown [text](url) first, then raw URL or site path
+  const re =
+    /\[([^\]]*)\]\((https?:\/\/[^)\s]+|\/[^)\s]*)\)|(https?:\/\/[^\s<>"']+)|(\/(?:about|books)(?=[\s,.)]|$))/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+  let keySeed = 0;
+  while ((match = re.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+    const isMarkdown = match[1] !== undefined && match[2] !== undefined;
+    const href = isMarkdown
+      ? match[2].replace(/[.,;)]+$/, "")
+      : (match[3] ?? match[4] ?? "").replace(/[.,;)]+$/, "");
+    const isExternal = /^https?:\/\//i.test(href);
+    const display = isMarkdown ? match[1] : href;
+    parts.push(
+      <a
+        key={`link-${match.index}-${keySeed++}`}
+        href={href}
+        {...(isExternal
+          ? { target: "_blank", rel: "noopener noreferrer" }
+          : {})}
+        className="chat-modal-link"
+      >
+        {display}
+      </a>
+    );
+    lastIndex = re.lastIndex;
+  }
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+  return parts.length === 1 ? parts[0] : <>{parts}</>;
+}
+
 // quick prompts for the empty chat state
 const QUICK_PROMPTS = [
   "how did you get into design?",
   "what are you building right now?",
+  "where's your about page?",
   "tell me about your journey",
 ];
 
@@ -61,14 +102,14 @@ export default function ChatAgent() {
     [sendMessage, isLoading]
   );
 
-  // track timestamps when new messages arrive
+  // track timestamps when new messages arrive (depend only on messages to avoid extra effect runs)
   useEffect(() => {
     if (messages.length === 0) return;
     const lastMsg = messages[messages.length - 1];
-    if (!timestamps[lastMsg.id]) {
-      setTimestamps((prev) => ({ ...prev, [lastMsg.id]: new Date() }));
-    }
-  }, [messages, timestamps]);
+    setTimestamps((prev) =>
+      prev[lastMsg.id] ? prev : { ...prev, [lastMsg.id]: new Date() }
+    );
+  }, [messages]);
 
   // show bubble after a short delay
   useEffect(() => {
@@ -270,7 +311,9 @@ export default function ChatAgent() {
                         <div className="chat-modal-message-bubble">
                           {message.parts?.map((part, i) =>
                             part.type === "text" ? (
-                              <span key={i}>{part.text}</span>
+                              <span key={i}>
+                                {linkifyText(part.text ?? "")}
+                              </span>
                             ) : null
                           )}
                         </div>
@@ -379,7 +422,6 @@ export default function ChatAgent() {
             className={`chat-modal-close ${showContent ? "visible" : ""} ${isClosing ? "closing" : ""}`}
             onClick={closeModal}
             aria-label="close chat"
-            style={{ transitionDelay: "0.35s" }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
               <path
