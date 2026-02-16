@@ -12,6 +12,7 @@
   "dependencies": {
     "@ai-sdk/openai": "^3.0.29",
     "@ai-sdk/react": "^3.0.88",
+    "@microsoft/clarity": "^1.0.2",
     "ai": "^6.0.86",
     "lottie-react": "^2.4.1",
     "next": "15.5.11",
