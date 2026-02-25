@@ -53,7 +53,6 @@ export default function Home() {
   const isMobileRef = useRef(false);
 
   // entrance animation flags
-  const [hasEntered, setHasEntered] = React.useState(false);
   const [showLogo, setShowLogo] = React.useState(false);
   const [showTopButton, setShowTopButton] = React.useState(false);
   const [showQuote, setShowQuote] = React.useState(false);
@@ -68,6 +67,9 @@ export default function Home() {
   >(null);
   const [sfFlagInteracted, setSfFlagInteracted] = React.useState(false);
   const [isMobile, setIsMobile] = React.useState(false);
+
+  // shimmer state — shimmer plays once on load, stops after first city tap
+  const [sfShimmerActive, setSfShimmerActive] = React.useState(true);
 
   // scroll-based hero fade
   const [heroScrollProgress, setHeroScrollProgress] = React.useState(0);
@@ -104,16 +106,15 @@ export default function Home() {
   // entrance animation sequence
   React.useEffect(() => {
     const base = 1200;
-    const t1 = setTimeout(() => setHasEntered(true), 120);
-    const t2 = setTimeout(() => { entranceCompleteRef.current = true; }, base);
-    const t3 = setTimeout(() => setShowLogo(true), base + 200);
-    const t4 = setTimeout(() => setShowTopButton(true), base + 400);
-    const t5 = setTimeout(() => setShowQuote(true), base + 600);
-    const t6 = setTimeout(() => setShowText(true), base + 900);
-    const t7 = setTimeout(() => setShowLine1(true), base + 1100);
-    const t8 = setTimeout(() => setShowLine2(true), base + 1300);
+    const t1 = setTimeout(() => { entranceCompleteRef.current = true; }, base);
+    const t2 = setTimeout(() => setShowLogo(true), base + 200);
+    const t3 = setTimeout(() => setShowTopButton(true), base + 400);
+    const t4 = setTimeout(() => setShowQuote(true), base + 600);
+    const t5 = setTimeout(() => setShowText(true), base + 900);
+    const t6 = setTimeout(() => setShowLine1(true), base + 1100);
+    const t7 = setTimeout(() => setShowLine2(true), base + 1300);
     return () => {
-      [t1, t2, t3, t4, t5, t6, t7, t8].forEach(clearTimeout);
+      [t1, t2, t3, t4, t5, t6, t7].forEach(clearTimeout);
     };
   }, []);
 
@@ -147,11 +148,16 @@ export default function Home() {
 
       const el = heroRef.current;
       if (el) {
-        const { x, y } = currentRef.current;
-        const size = isMobileRef.current ? "28rem 20rem" : "36rem 26rem";
-        const gradient = `radial-gradient(ellipse ${size} at ${x}px ${y}px, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 26%, rgba(0,0,0,0.95) 40%, rgba(0,0,0,0.8) 58%, rgba(0,0,0,0.55) 72%, rgba(0,0,0,0.3) 84%, rgba(0,0,0,0.12) 94%, rgba(0,0,0,0) 100%)`;
-        el.style.maskImage = gradient;
-        el.style.webkitMaskImage = gradient;
+        if (isMobileRef.current) {
+          el.style.maskImage = "none";
+          el.style.webkitMaskImage = "none";
+        } else {
+          const { x, y } = currentRef.current;
+          const size = "36rem 26rem";
+          const gradient = `radial-gradient(ellipse ${size} at ${x}px ${y}px, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 26%, rgba(0,0,0,0.95) 40%, rgba(0,0,0,0.8) 58%, rgba(0,0,0,0.55) 72%, rgba(0,0,0,0.3) 84%, rgba(0,0,0,0.12) 94%, rgba(0,0,0,0) 100%)`;
+          el.style.maskImage = gradient;
+          el.style.webkitMaskImage = gradient;
+        }
       }
 
       rafId = requestAnimationFrame(animate);
@@ -163,10 +169,10 @@ export default function Home() {
 
   // hero styles based on scroll (mask is set by RAF in useEffect, not here)
   const heroImageStyle = {
-    transform: isMobile ? "scale(1.1)" : `scale(${1 - heroScrollProgress * 0.08})`,
+    transform: isMobile ? undefined : `scale(${1 - heroScrollProgress * 0.08})`,
     transformOrigin: "center",
-    opacity: 1 - heroScrollProgress * 0.7,
-    transition: "transform 0.3s ease-out, opacity 0.3s ease-out",
+    opacity: isMobile ? undefined : 1 - heroScrollProgress * 0.7,
+    transition: isMobile ? undefined : "transform 0.3s ease-out, opacity 0.3s ease-out",
   };
 
   const heroContentStyle = {
@@ -200,7 +206,7 @@ export default function Home() {
         <div className="hero-image-wrap">
           <img
             ref={heroRef}
-            src="https://res.cloudinary.com/dhajah4xb/image/upload/v1758094446/headShot1_buzn8d.png"
+            src={isMobile ? "/mobile-headshot.png" : "https://res.cloudinary.com/dhajah4xb/image/upload/v1758094446/headShot1_buzn8d.png"}
             className={`absolute inset-0 h-full w-full ${isMobile ? "mobile-image" : "object-contain"} hero-image`}
             alt="headshot"
             style={heroImageStyle}
@@ -214,7 +220,7 @@ export default function Home() {
           className={`absolute inset-0 flex flex-col justify-end ${isMobile ? "p-4" : "p-8"} pointer-events-none hero-content`}
           style={heroContentStyle}
         >
-          <div className="flex flex-col items-center space-y-8 pb-16">
+          <div className="hero-content-inner flex flex-col items-center space-y-8 pb-16">
             {/* quote animation */}
             <div className={`hero-quote transition-all duration-700 ${showQuote ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
               <Lottie
@@ -230,36 +236,38 @@ export default function Home() {
                 <div className={`transition-all duration-500 ${showLine1 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}>
                   Clement is a product designer and creative director based in{" "}
 
-                  {/* san francisco — flag + modal trigger */}
+                  {/* san francisco — shimmer on mobile, flag on desktop */}
                   <span
                     className="relative inline-block cursor-pointer group"
-                    onMouseEnter={() => { setHoveredCity("san-francisco"); if (!sfFlagInteracted) setSfFlagInteracted(true); }}
-                    onMouseLeave={() => setHoveredCity(null)}
-                    onTouchStart={() => { setHoveredCity("san-francisco"); if (!sfFlagInteracted) setSfFlagInteracted(true); }}
+                    onMouseEnter={() => { if (!isMobile) { setHoveredCity("san-francisco"); if (!sfFlagInteracted) setSfFlagInteracted(true); } }}
+                    onMouseLeave={() => { if (!isMobile) setHoveredCity(null); }}
+                    onTouchStart={() => { setHoveredCity("san-francisco"); if (!sfFlagInteracted) setSfFlagInteracted(true); setSfShimmerActive(false); }}
                     onTouchEnd={() => setHoveredCity(null)}
-                    onClick={() => setActiveCityModal("san-francisco")}
+                    onClick={() => { if (isMobile) setSfShimmerActive(false); setActiveCityModal("san-francisco"); }}
                   >
-                    <span className="relative">san francisco</span>
-                    {/* usa flag — closer to text on mobile only; desktop keeps original position */}
-                    <div
-                      className={`absolute -top-7 sm:-top-12 left-1/2 transform -translate-x-1/2 transition-all duration-300 ease-out ${
-                        !sfFlagInteracted && hoveredCity !== "dubai"
-                          ? "opacity-100 scale-100 translate-y-0"
-                          : hoveredCity === "san-francisco"
+                    <span className={`relative ${isMobile && sfShimmerActive ? "shimmer-city" : isMobile ? "shimmer-city-off" : ""}`}>san francisco</span>
+                    {/* usa flag — desktop only */}
+                    {!isMobile && (
+                      <div
+                        className={`absolute -top-12 left-1/2 transform -translate-x-1/2 transition-all duration-300 ease-out ${
+                          !sfFlagInteracted && hoveredCity !== "dubai"
                             ? "opacity-100 scale-100 translate-y-0"
-                            : "opacity-0 scale-75 translate-y-2"
-                      }`}
-                    >
-                      <div className={!sfFlagInteracted && hoveredCity !== "dubai" ? "flag-bounce" : ""}>
-                        <Lottie
-                          key={hoveredCity === "san-francisco" ? "sf-active" : "sf-inactive"}
-                          animationData={sfAnimation}
-                          style={{ width: isMobile ? 60 : 80, height: isMobile ? 35 : 45 }}
-                          loop={false}
-                          autoplay={true}
-                        />
+                            : hoveredCity === "san-francisco"
+                              ? "opacity-100 scale-100 translate-y-0"
+                              : "opacity-0 scale-75 translate-y-2"
+                        }`}
+                      >
+                        <div className={!sfFlagInteracted && hoveredCity !== "dubai" ? "flag-bounce" : ""}>
+                          <Lottie
+                            key={hoveredCity === "san-francisco" ? "sf-active" : "sf-inactive"}
+                            animationData={sfAnimation}
+                            style={{ width: 80, height: 45 }}
+                            loop={false}
+                            autoplay={true}
+                          />
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </span>
                   {" "}
                   <span>
@@ -267,32 +275,34 @@ export default function Home() {
                   </span>
                   {" "}
 
-                  {/* dubai — flag + modal trigger */}
+                  {/* dubai — flag on desktop, tap-to-open on mobile */}
                   <span
                     className="relative inline-block cursor-pointer group"
-                    onMouseEnter={() => { setHoveredCity("dubai"); if (!sfFlagInteracted) setSfFlagInteracted(true); }}
-                    onMouseLeave={() => setHoveredCity(null)}
+                    onMouseEnter={() => { if (!isMobile) { setHoveredCity("dubai"); if (!sfFlagInteracted) setSfFlagInteracted(true); } }}
+                    onMouseLeave={() => { if (!isMobile) setHoveredCity(null); }}
                     onTouchStart={() => { setHoveredCity("dubai"); if (!sfFlagInteracted) setSfFlagInteracted(true); }}
                     onTouchEnd={() => setHoveredCity(null)}
                     onClick={() => setActiveCityModal("dubai")}
                   >
                     <span className="relative">dubai</span>
-                    {/* uae flag */}
-                    <div
-                      className={`absolute -top-12 left-1/2 transform -translate-x-1/2 transition-all duration-300 ease-out ${
-                        hoveredCity === "dubai"
-                          ? "opacity-100 scale-100 translate-y-0"
-                          : "opacity-0 scale-75 translate-y-2"
-                      }`}
-                    >
-                      <Lottie
-                        key={hoveredCity === "dubai" ? "uae-active" : "uae-inactive"}
-                        animationData={uaeAnimation}
-                        style={{ width: isMobile ? 60 : 80, height: isMobile ? 35 : 45 }}
-                        loop={false}
-                        autoplay={true}
-                      />
-                    </div>
+                    {/* uae flag — desktop only */}
+                    {!isMobile && (
+                      <div
+                        className={`absolute -top-12 left-1/2 transform -translate-x-1/2 transition-all duration-300 ease-out ${
+                          hoveredCity === "dubai"
+                            ? "opacity-100 scale-100 translate-y-0"
+                            : "opacity-0 scale-75 translate-y-2"
+                        }`}
+                      >
+                        <Lottie
+                          key={hoveredCity === "dubai" ? "uae-active" : "uae-inactive"}
+                          animationData={uaeAnimation}
+                          style={{ width: 80, height: 45 }}
+                          loop={false}
+                          autoplay={true}
+                        />
+                      </div>
+                    )}
                   </span>
                   .
                 </div>

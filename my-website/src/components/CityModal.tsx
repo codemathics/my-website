@@ -120,12 +120,23 @@ export default function CityModal({ city, onClose }: CityModalProps) {
   const velocityRef = useRef<{ vx: number; vy: number }>({ vx: 0, vy: 0 });
   const lastMoveRef = useRef<{ x: number; y: number; t: number } | null>(null);
 
-  // drag-me cursor indicator
+  // drag-me cursor indicator (only used when device has fine pointer; hidden on touch via CSS)
   const [dragIndicator, setDragIndicator] = useState<{
     visible: boolean;
     x: number;
     y: number;
   }>({ visible: false, x: 0, y: 0 });
+  const hasFinePointerRef = useRef(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(hover: hover) and (pointer: fine)");
+    const update = () => {
+      hasFinePointerRef.current = mq.matches;
+    };
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
 
   // ─── close handler ───────────────────────────────────
 
@@ -208,10 +219,11 @@ export default function CityModal({ city, onClose }: CityModalProps) {
     return () => document.removeEventListener("keydown", onKeyDown, true);
   }, [city, handleClose]);
 
-  // drag-me cursor visibility (hides over close button)
+  // drag-me cursor visibility (hides over close button); only track when user has fine pointer (desktop)
   useEffect(() => {
     if (!city) return;
     const onMove = (e: PointerEvent) => {
+      if (!hasFinePointerRef.current) return;
       const canvas = carouselRef.current;
       if (!canvas) return;
       const closeBtn = closeBtnRef.current;

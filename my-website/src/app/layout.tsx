@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     apple: "/icon.png",
   },
   openGraph: {
-    title: "clement hugbo — product designer & creative director",
+    title: "clement hugbo - product designer & creative director",
     description: "Clement is a product designer and creative director based in san francisco and dubai. passionate about creating visual stories and experiences that inspire and deliver measurable impact for businesses.",
     images: [
       {
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "clement hugbo — product designer & creative director",
+    title: "clement hugbo - product designer & creative director",
     description: "Clement is a product designer and creative director based in san francisco and dubai. passionate about creating visual stories and experiences that inspire and deliver measurable impact for businesses.",
     images: ["/og.png"],
   },
