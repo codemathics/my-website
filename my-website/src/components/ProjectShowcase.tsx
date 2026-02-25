@@ -21,12 +21,112 @@ interface ProjectShowcaseProps {
   projects: ShowcaseProject[];
 }
 
+/* ── mobile: individual project card with IntersectionObserver entrance ── */
+
+function MobileProjectCard({
+  project,
+  index,
+  gatewayLottie,
+}: {
+  project: ShowcaseProject;
+  index: number;
+  gatewayLottie: object | null;
+}) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setVisible(entry.isIntersecting),
+      { threshold: 0.25 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const lottieData =
+    project.primaryLottie ?? (index === 0 ? gatewayLottie : null);
+
+  const renderTitle = () => {
+    const letters = project.name.split("").map((ch, i) => (
+      <span
+        key={i}
+        className="mobile-showcase-letter"
+        style={{
+          transitionDelay: visible ? `${0.35 + i * 0.03}s` : "0s",
+        }}
+      >
+        {ch}
+      </span>
+    ));
+    if (project.link) {
+      return (
+        <a href={project.link} target="_blank" rel="noopener noreferrer">
+          {letters}
+        </a>
+      );
+    }
+    return <>{letters}</>;
+  };
+
+  return (
+    <div
+      ref={cardRef}
+      className={`mobile-project-card ${visible ? "mobile-project-visible" : ""}`}
+    >
+      {/* image */}
+      <div className="mobile-project-image">
+        {lottieData ? (
+          <div className="mobile-project-lottie">
+            <Lottie animationData={lottieData} loop autoplay />
+          </div>
+        ) : project.primaryImage ? (
+          <img
+            src={project.primaryImage.src}
+            alt={project.primaryImage.alt}
+          />
+        ) : null}
+      </div>
+
+      {/* highlights */}
+      {project.highlights && project.highlights.length > 0 && (
+        <div className="mobile-project-highlights">
+          {project.highlights.map((h) => (
+            <div key={h} className="project-highlight">
+              <span className="project-highlight-icon" />
+              <span className="project-highlight-text">{h}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* title */}
+      <div className="mobile-project-title">{renderTitle()}</div>
+
+      {/* description */}
+      <p className="mobile-project-description">{project.description}</p>
+    </div>
+  );
+}
+
+/* ── main showcase component ── */
+
 function ProjectShowcase({ projects }: ProjectShowcaseProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const stickyRef = useRef<HTMLDivElement>(null);
   const count = projects.length;
+  const [isMobile, setIsMobile] = useState(false);
 
-  // display state
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  // desktop display state
   const [displayIndex, setDisplayIndex] = useState(0);
   const [panelRevealed, setPanelRevealed] = useState(false);
   const [contentVisible, setContentVisible] = useState(false);
@@ -42,13 +142,20 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
   const displayIndexRef = useRef(0);
   const targetIndexRef = useRef(0);
   const isTransitioningRef = useRef(false);
-  const exitTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const cooldownTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const panelTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const exitTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined
+  );
+  const cooldownTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined
+  );
+  const panelTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined
+  );
   const rafRef = useRef<number>(0);
 
-  // entrance + reset: observe when the showcase enters/leaves viewport
+  // entrance + reset (desktop only)
   useEffect(() => {
+    if (isMobile) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -58,7 +165,6 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
             450
           );
         } else {
-          // left viewport — reset everything
           clearTimeout(panelTimerRef.current);
           clearTimeout(exitTimerRef.current);
           clearTimeout(cooldownTimerRef.current);
@@ -80,21 +186,18 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
     const el = wrapperRef.current;
     if (el) observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [isMobile]);
 
-  // hide custom click cursor when the displayed project changes (so it doesn’t stick or show on wrong section)
   useEffect(() => {
     setClickIndicator((p) => ({ ...p, visible: false }));
   }, [displayIndex]);
 
-  // trigger a project transition
   const triggerTransition = useCallback((targetIdx: number) => {
     isTransitioningRef.current = true;
 
     const dir = targetIdx > displayIndexRef.current ? "up" : "down";
     setDirection(dir);
 
-    // phase 1: exit current content
     setContentVisible(false);
     setIsExiting(true);
 
@@ -104,8 +207,6 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
     exitTimerRef.current = setTimeout(() => {
       const finalTarget = targetIndexRef.current;
 
-      // edge case: user scrolled back to the current project
-      // during the exit — just restore, no swap needed
       if (finalTarget === displayIndexRef.current) {
         flushSync(() => {
           setIsExiting(false);
@@ -117,28 +218,20 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
 
       displayIndexRef.current = finalTarget;
 
-      // phase 2: synchronous content swap — commits to DOM immediately
       flushSync(() => {
         setDisplayIndex(finalTarget);
         setIsExiting(false);
       });
 
-      // force browser to compute styles for the hidden state
-      // this locks in the "from" values for transitions
-      // without ever painting the hidden frame to screen
       if (stickyRef.current) void stickyRef.current.offsetHeight;
 
-      // phase 3: synchronous entrance trigger — also commits immediately
-      // the browser never paints between phase 2 and phase 3
       flushSync(() => {
         setContentVisible(true);
       });
 
-      // short grace period before allowing next transition
       cooldownTimerRef.current = setTimeout(() => {
         isTransitioningRef.current = false;
 
-        // chain next transition if target drifted while animating
         if (targetIndexRef.current !== displayIndexRef.current) {
           triggerTransition(targetIndexRef.current);
         }
@@ -146,7 +239,6 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
     }, 620);
   }, []);
 
-  // scroll handler — detect which project "page" we're on
   const handleScroll = useCallback(() => {
     const wrapper = wrapperRef.current;
     if (!wrapper) return;
@@ -167,15 +259,11 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
 
     targetIndexRef.current = targetIdx;
 
-    // if user scrolled back to the currently displayed project,
-    // cancel in-flight transition and smoothly restore content
     if (targetIdx === displayIndexRef.current) {
       if (isTransitioningRef.current) {
         clearTimeout(exitTimerRef.current);
         clearTimeout(cooldownTimerRef.current);
 
-        // synchronous restore — goes directly from exit state
-        // to visible state (CSS transition smoothly reverses)
         flushSync(() => {
           setIsExiting(false);
           setContentVisible(true);
@@ -191,8 +279,9 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
     }
   }, [count, triggerTransition]);
 
-  // listen to scroll on the page container
+  // desktop scroll listener
   useEffect(() => {
+    if (isMobile) return;
     const pageContainer = document.querySelector(".page-container");
     if (!pageContainer) return;
 
@@ -211,24 +300,20 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
       clearTimeout(cooldownTimerRef.current);
       clearTimeout(panelTimerRef.current);
     };
-  }, [handleScroll]);
+  }, [handleScroll, isMobile]);
 
-  const project = projects[displayIndex];
-  const nextProject =
-    displayIndex < count - 1 ? projects[displayIndex + 1] : null;
-
-  // preload BLOCKRADAR Lottie once with a robust fallback path
+  // preload BLOCKRADAR Lottie
   const [gatewayLottie, setGatewayLottie] = useState<object | null>(null);
   useEffect(() => {
     let cancelled = false;
 
-    const loadGatewayLottie = async () => {
+    const load = async () => {
       try {
         const mod = await import("../../public/gateway.json");
         if (!cancelled) setGatewayLottie(mod.default);
         return;
       } catch {
-        // fallback: fetch from /public in case module import is unavailable
+        /* fallback */
       }
 
       try {
@@ -236,17 +321,37 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
         const data = await res.json();
         if (!cancelled) setGatewayLottie(data);
       } catch {
-        // keep showcase usable even if Lottie fails to load
+        /* keep usable */
       }
     };
 
-    loadGatewayLottie();
+    load();
     return () => {
       cancelled = true;
     };
   }, []);
 
-  // build class list
+  /* ── mobile: individual scroll-snap project cards ── */
+  if (isMobile) {
+    return (
+      <div className="mobile-projects-wrapper">
+        {projects.map((project, i) => (
+          <MobileProjectCard
+            key={i}
+            project={project}
+            index={i}
+            gatewayLottie={gatewayLottie}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  /* ── desktop/tablet: sticky scroll-swap ── */
+  const project = projects[displayIndex];
+  const nextProject =
+    displayIndex < count - 1 ? projects[displayIndex + 1] : null;
+
   const stickyClasses = [
     "project-showcase-sticky",
     panelRevealed ? "panel-revealed" : "",
@@ -257,9 +362,13 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
     .filter(Boolean)
     .join(" ");
 
-  // render a visual (lottie or image); BLOCKRADAR uses lazy-loaded gatewayLottie
-  const renderVisual = (p: ShowcaseProject, className: string, isCurrent = false) => {
-    const lottieData = p.primaryLottie ?? (isCurrent && displayIndex === 0 ? gatewayLottie : null);
+  const renderVisual = (
+    p: ShowcaseProject,
+    className: string,
+    isCurrent = false
+  ) => {
+    const lottieData =
+      p.primaryLottie ?? (isCurrent && displayIndex === 0 ? gatewayLottie : null);
     if (lottieData) {
       return (
         <div className={`${className} showcase-lottie`}>
@@ -279,14 +388,15 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
     return null;
   };
 
-  // only treat hover as "over title letters" when target is inside the link or is a .showcase-letter (no-link case)
   const isOverTitleLetters = (e: React.PointerEvent) => {
     const area = e.currentTarget;
     const first = area.firstElementChild;
     if (!first) return false;
     const target = e.target as Node;
     if (first.tagName === "A") return first.contains(target);
-    return (e.target as Element).classList?.contains("showcase-letter") ?? false;
+    return (
+      (e.target as Element).classList?.contains("showcase-letter") ?? false
+    );
   };
 
   return (
@@ -296,10 +406,8 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
       style={{ height: `${count * 100}vh` }}
     >
       <div ref={stickyRef} className={stickyClasses}>
-        {/* dark right panel — grows from bottom to top */}
         <div className="showcase-panel-right" />
 
-        {/* left: project info */}
         <div className="showcase-info">
           <p className="showcase-description">{project.description}</p>
           {project.highlights && project.highlights.length > 0 && (
@@ -314,15 +422,12 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
           )}
         </div>
 
-        {/* right: mockup images */}
         <div className="showcase-mockups">
           <div className="showcase-mockup-stack">
-            {/* primary */}
             <div className="showcase-primary-wrap">
               {renderVisual(project, "showcase-img-primary", true)}
             </div>
 
-            {/* secondary (next project preview, blurred) */}
             {nextProject && (
               <div className="showcase-secondary-wrap">
                 {renderVisual(nextProject, "showcase-img-secondary")}
@@ -331,26 +436,43 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
           </div>
         </div>
 
-        {/* title — custom cursor only when hovering the letters inside .showcase-title-area; anchors remain clickable */}
         <div
           className={`showcase-title-area ${clickIndicator.visible ? "showcase-title-area-cursor-active" : ""}`}
           onPointerEnter={(e) => {
+            if (e.pointerType !== "mouse") return;
             if (!isOverTitleLetters(e)) return;
-            setClickIndicator({ visible: true, x: e.clientX, y: e.clientY });
+            setClickIndicator({
+              visible: true,
+              x: e.clientX,
+              y: e.clientY,
+            });
           }}
           onPointerLeave={() =>
             setClickIndicator((p) => ({ ...p, visible: false }))
           }
           onPointerMove={(e) => {
+            if (e.pointerType !== "mouse") {
+              setClickIndicator((p) => ({ ...p, visible: false }));
+              return;
+            }
             if (isOverTitleLetters(e)) {
-              setClickIndicator((p) => ({ ...p, x: e.clientX, y: e.clientY, visible: true }));
+              setClickIndicator((p) => ({
+                ...p,
+                x: e.clientX,
+                y: e.clientY,
+                visible: true,
+              }));
             } else {
               setClickIndicator((p) => ({ ...p, visible: false }));
             }
           }}
         >
           {project.link ? (
-            <a href={project.link} target="_blank" rel="noopener noreferrer">
+            <a
+              href={project.link}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               {project.name.split("").map((letter, i) => (
                 <span
                   key={`${displayIndex}-${i}`}
@@ -376,7 +498,6 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
           )}
         </div>
 
-        {/* click cursor — follows pointer over project title (Figma design) */}
         <div
           className={`showcase-click-cursor ${clickIndicator.visible ? "visible" : ""}`}
           style={{

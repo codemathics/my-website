@@ -19,9 +19,11 @@
   transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1) 0.05s;
 }
 
-/* hover — line grows left to right */
-.nav-link:hover .nav-underline {
-  transform: scaleX(1);
-  transform-origin: left center;
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+/* hover — line grows left to right (desktop only) */
+@media (hover: hover) and (pointer: fine) {
+  .nav-link:hover .nav-underline {
+    transform: scaleX(1);
+    transform-origin: left center;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
 }

@@ -156,8 +156,14 @@
   overflow: hidden;
   z-index: 1;
   touch-action: none;
-  cursor: none;
   user-select: none;
+}
+
+/* hide native cursor only when using drag-me (desktop pointer only) */
+@media (hover: hover) and (pointer: fine) {
+  .city-modal-carousel {
+    cursor: none;
+  }
 }
 
 /* blur layer — full canvas slightly blurred so edges are out of focus */
@@ -287,7 +293,7 @@
   transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.05s;
 }
 
-/* ─── drag-me indicator ──────────────────────────────── */
+/* ─── drag-me indicator (desktop pointer only; hidden on touch) ──────────────────────────────── */
 
 .city-modal-dragme {
   position: fixed;
@@ -307,21 +313,30 @@
     filter 1s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.city-modal-dragme.visible {
-  opacity: 1;
-  transform: translate(-50%, -120%) scale(1);
-  filter: blur(0px);
-  animation: dragMePulse 3.2s ease-in-out 1s infinite;
-  transition:
-    opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.15s cubic-bezier(0.16, 1, 0.3, 1),
-    filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+/* hide drag-me on touch devices; show only when user has fine pointer */
+@media (pointer: coarse), (hover: none) {
+  .city-modal-dragme {
+    display: none !important;
+  }
 }
 
-.city-modal-dragme.visible.dragging {
-  transform: translate(-50%, -120%) scale(0.92);
-  animation: none;
-  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+@media (hover: hover) and (pointer: fine) {
+  .city-modal-dragme.visible {
+    opacity: 1;
+    transform: translate(-50%, -120%) scale(1);
+    filter: blur(0px);
+    animation: dragMePulse 3.2s ease-in-out 1s infinite;
+    transition:
+      opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.15s cubic-bezier(0.16, 1, 0.3, 1),
+      filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .city-modal-dragme.visible.dragging {
+    transform: translate(-50%, -120%) scale(0.92);
+    animation: none;
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  }
 }
 
 .city-modal-dragme-inner {

@@ -173,7 +173,7 @@ export default function Navbar({ showLogo = true, showNav = true }: NavbarProps)
           ))}
         </div>
 
-        {/* hamburger — visible only on tablet/mobile */}
+        {/* nav menu icon — visible only on tablet/mobile; Figma: rounded box with animated center line */}
         <button
           type="button"
           className={`navbar-toggle ${menuOpen ? "open" : ""}`}
@@ -182,9 +182,18 @@ export default function Navbar({ showLogo = true, showNav = true }: NavbarProps)
           aria-expanded={menuOpen}
           style={{ pointerEvents: "auto" }}
         >
-          <span className="navbar-toggle-line" />
-          <span className="navbar-toggle-line" />
-          <span className="navbar-toggle-line" />
+          <svg className="navbar-toggle-svg" width="30" height="30" viewBox="0 0 30 30" fill="none">
+            <rect
+              className="navbar-toggle-box"
+              x="3.75" y="3.75" width="22.5" height="22.5" rx="5"
+              stroke="white" strokeOpacity="0.2" strokeWidth="2"
+            />
+            <line
+              className="navbar-toggle-bar"
+              x1="9.82" y1="10" x2="19.82" y2="10"
+              stroke="white" strokeOpacity="0.8" strokeWidth="2" strokeLinecap="round"
+            />
+          </svg>
         </button>
       </nav>
 
