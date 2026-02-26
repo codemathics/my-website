@@ -9,7 +9,7 @@ import "./NavLink.css";
 interface NavItem {
   label: string;
   href: string;
-  isRoute?: boolean; // use Next.js Link and pathname for active
+  isRoute?: boolean; // use next.js link and pathname for active
   isExternal?: boolean; // open in new tab
 }
 
@@ -173,7 +173,7 @@ export default function Navbar({ showLogo = true, showNav = true }: NavbarProps)
           ))}
         </div>
 
-        {/* nav menu icon — visible only on tablet/mobile; Figma: rounded box with animated center line */}
+        {/* nav menu icon — visible only on tablet/mobile; figma: rounded box with animated center line */}
         <button
           type="button"
           className={`navbar-toggle ${menuOpen ? "open" : ""}`}

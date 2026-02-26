@@ -120,7 +120,7 @@ export default function CityModal({ city, onClose }: CityModalProps) {
   const velocityRef = useRef<{ vx: number; vy: number }>({ vx: 0, vy: 0 });
   const lastMoveRef = useRef<{ x: number; y: number; t: number } | null>(null);
 
-  // drag-me cursor indicator (only used when device has fine pointer; hidden on touch via CSS)
+  // drag-me cursor indicator (only used when device has fine pointer; hidden on touch via css)
   const [dragIndicator, setDragIndicator] = useState<{
     visible: boolean;
     x: number;
@@ -285,7 +285,7 @@ export default function CityModal({ city, onClose }: CityModalProps) {
     };
   }, [showContent, city]);
 
-  // compute masonry layout (Figma-style: columns, 8px gap, no overlap; wider & taller than viewport so drag works both ways)
+  // compute masonry layout (figma-style: columns, 8px gap, no overlap; wider & taller than viewport so drag works both ways)
   useLayoutEffect(() => {
     if (!showContent) return;
     if (imageDimensions.length === 0) return;
@@ -427,7 +427,7 @@ export default function CityModal({ city, onClose }: CityModalProps) {
     carouselRef.current?.classList.remove("momentum");
   };
 
-  // rAF-based momentum — smooth exponential deceleration
+  // raf-based momentum — smooth exponential deceleration
   const startMomentum = () => {
     const el = carouselRef.current;
     if (!el) return;
@@ -469,7 +469,7 @@ export default function CityModal({ city, onClose }: CityModalProps) {
     // kill any running momentum immediately
     stopMomentum();
 
-    // apply dragging class directly to DOM — no React batching delay
+    // apply dragging class directly to dom — no react batching delay
     el.classList.add("dragging");
     isDraggingRef.current = true;
     setIsDragging(true);
@@ -518,11 +518,11 @@ export default function CityModal({ city, onClose }: CityModalProps) {
     setIsDragging(false);
     dragPointerIdRef.current = null;
 
-    // remove dragging class from DOM directly
+    // remove dragging class from dom directly
     const el = carouselRef.current;
     if (el) el.classList.remove("dragging");
 
-    // start smooth rAF-based momentum deceleration
+    // start smooth raf-based momentum deceleration
     const { vx, vy } = velocityRef.current;
     const speed = Math.sqrt(vx * vx + vy * vy);
 

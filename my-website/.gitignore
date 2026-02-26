@@ -43,6 +43,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# avoid staging icon that corrupts index (missing blob); remove when fixed
+public/icon.png
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

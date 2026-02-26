@@ -4,11 +4,11 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 
-// linkify: [anchor](url) → clickable word; raw URLs/paths still supported as fallback
+// linkify: [anchor](url) → clickable word; raw urls/paths still supported as fallback
 function linkifyText(text: string): React.ReactNode {
   if (!text) return null;
   const parts: React.ReactNode[] = [];
-  // match markdown [text](url) first, then raw URL or site path
+  // match markdown [text](url) first, then raw url or site path
   const re =
     /\[([^\]]*)\]\((https?:\/\/[^)\s]+|\/[^)\s]*)\)|(https?:\/\/[^\s<>"']+)|(\/(?:about|books)(?=[\s,.)]|$))/g;
   let lastIndex = 0;

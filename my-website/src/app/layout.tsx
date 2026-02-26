@@ -1,25 +1,9 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Gochi_Hand } from "next/font/google";
 import ChatAgent from "@/components/ChatAgent";
+import VideoReel from "@/components/VideoReel";
 import ClarityScript from "@/components/ClarityScript";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const gochiHand = Gochi_Hand({
-  variable: "--font-gochi-hand",
-  weight: "400",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "clement hugbo - product designer & creative director",
@@ -54,9 +38,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${gochiHand.variable} antialiased`}
+        className="antialiased"
       >
         {children}
+        <VideoReel />
         <ChatAgent />
         <ClarityScript />
         <GoogleAnalytics />

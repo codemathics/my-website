@@ -2,35 +2,21 @@
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import { flushSync } from "react-dom";
 import Lottie from "lottie-react";
-
-interface ProjectImage {
-  src: string;
-  alt: string;
-}
-
-export interface ShowcaseProject {
-  name: string;
-  description: string;
-  primaryImage?: ProjectImage;
-  primaryLottie?: object;
-  link?: string;
-  highlights?: string[];
-}
+import Link from "next/link";
+import { ShowcaseProject } from "@/data/projects";
 
 interface ProjectShowcaseProps {
   projects: ShowcaseProject[];
 }
 
-/* ── mobile: individual project card with IntersectionObserver entrance ── */
+/* ── mobile: individual project card with intersectionobserver entrance ── */
 
 function MobileProjectCard({
   project,
   index,
-  gatewayLottie,
 }: {
   project: ShowcaseProject;
   index: number;
-  gatewayLottie: object | null;
 }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
@@ -46,29 +32,25 @@ function MobileProjectCard({
     return () => observer.disconnect();
   }, []);
 
-  const lottieData =
-    project.primaryLottie ?? (index === 0 ? gatewayLottie : null);
+  const lottieData = project.primaryLottie ?? null;
 
   const renderTitle = () => {
     const letters = project.name.split("").map((ch, i) => (
       <span
         key={i}
-        className="mobile-showcase-letter"
+        className={`mobile-showcase-letter ${ch === " " ? "showcase-letter-space" : ""}`}
         style={{
           transitionDelay: visible ? `${0.35 + i * 0.03}s` : "0s",
         }}
       >
-        {ch}
+        {ch === " " ? "\u00A0" : ch}
       </span>
     ));
-    if (project.link) {
-      return (
-        <a href={project.link} target="_blank" rel="noopener noreferrer">
-          {letters}
-        </a>
-      );
-    }
-    return <>{letters}</>;
+    return (
+      <Link href={`/projects/${project.slug}`}>
+        {letters}
+      </Link>
+    );
   };
 
   return (
@@ -141,6 +123,7 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
   // refs for transition control
   const displayIndexRef = useRef(0);
   const targetIndexRef = useRef(0);
+  const lastTargetRef = useRef(0);
   const isTransitioningRef = useRef(false);
   const exitTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined
@@ -178,6 +161,7 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
 
           displayIndexRef.current = 0;
           targetIndexRef.current = 0;
+          lastTargetRef.current = 0;
           isTransitioningRef.current = false;
         }
       },
@@ -192,11 +176,31 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
     setClickIndicator((p) => ({ ...p, visible: false }));
   }, [displayIndex]);
 
+  const EXIT_DURATION = 320;
+  const COOLDOWN = 120;
+
   const triggerTransition = useCallback((targetIdx: number) => {
     isTransitioningRef.current = true;
 
     const dir = targetIdx > displayIndexRef.current ? "up" : "down";
     setDirection(dir);
+
+    const jumpAhead = Math.abs(targetIdx - displayIndexRef.current) >= 2;
+
+    if (jumpAhead) {
+      clearTimeout(exitTimerRef.current);
+      clearTimeout(cooldownTimerRef.current);
+      displayIndexRef.current = targetIdx;
+      targetIndexRef.current = targetIdx;
+      lastTargetRef.current = targetIdx;
+      flushSync(() => {
+        setDisplayIndex(targetIdx);
+        setIsExiting(false);
+        setContentVisible(true);
+      });
+      isTransitioningRef.current = false;
+      return;
+    }
 
     setContentVisible(false);
     setIsExiting(true);
@@ -217,6 +221,7 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
       }
 
       displayIndexRef.current = finalTarget;
+      lastTargetRef.current = finalTarget;
 
       flushSync(() => {
         setDisplayIndex(finalTarget);
@@ -235,8 +240,8 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
         if (targetIndexRef.current !== displayIndexRef.current) {
           triggerTransition(targetIndexRef.current);
         }
-      }, 200);
-    }, 620);
+      }, COOLDOWN);
+    }, EXIT_DURATION);
   }, []);
 
   const handleScroll = useCallback(() => {
@@ -252,10 +257,22 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
     const rawProgress = Math.min(1, scrolled / scrollableHeight);
 
     const perProject = 1 / count;
-    const targetIdx = Math.min(
+    let targetIdx = Math.min(
       count - 1,
       Math.max(0, Math.floor(rawProgress / perProject))
     );
+
+    const lastTarget = lastTargetRef.current;
+    const hysteresis = 0.02;
+    const segmentStart = targetIdx / count;
+    const segmentEnd = (targetIdx + 1) / count;
+
+    if (targetIdx > lastTarget && rawProgress < segmentStart + hysteresis) {
+      targetIdx = lastTarget;
+    } else if (targetIdx < lastTarget && rawProgress > segmentEnd - hysteresis) {
+      targetIdx = lastTarget;
+    }
+    lastTargetRef.current = targetIdx;
 
     targetIndexRef.current = targetIdx;
 
@@ -302,46 +319,12 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
     };
   }, [handleScroll, isMobile]);
 
-  // preload BLOCKRADAR Lottie
-  const [gatewayLottie, setGatewayLottie] = useState<object | null>(null);
-  useEffect(() => {
-    let cancelled = false;
-
-    const load = async () => {
-      try {
-        const mod = await import("../../public/gateway.json");
-        if (!cancelled) setGatewayLottie(mod.default);
-        return;
-      } catch {
-        /* fallback */
-      }
-
-      try {
-        const res = await fetch("/gateway.json");
-        const data = await res.json();
-        if (!cancelled) setGatewayLottie(data);
-      } catch {
-        /* keep usable */
-      }
-    };
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
   /* ── mobile: individual scroll-snap project cards ── */
   if (isMobile) {
     return (
       <div className="mobile-projects-wrapper">
         {projects.map((project, i) => (
-          <MobileProjectCard
-            key={i}
-            project={project}
-            index={i}
-            gatewayLottie={gatewayLottie}
-          />
+          <MobileProjectCard key={i} project={project} index={i} />
         ))}
       </div>
     );
@@ -367,8 +350,7 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
     className: string,
     isCurrent = false
   ) => {
-    const lottieData =
-      p.primaryLottie ?? (isCurrent && displayIndex === 0 ? gatewayLottie : null);
+    const lottieData = p.primaryLottie ?? null;
     if (lottieData) {
       return (
         <div className={`${className} showcase-lottie`}>
@@ -467,35 +449,17 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
             }
           }}
         >
-          {project.link ? (
-            <a
-              href={project.link}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {project.name.split("").map((letter, i) => (
-                <span
-                  key={`${displayIndex}-${i}`}
-                  className="showcase-letter"
-                  style={{ transitionDelay: `${0.18 + i * 0.03}s` }}
-                >
-                  {letter}
-                </span>
-              ))}
-            </a>
-          ) : (
-            <>
-              {project.name.split("").map((letter, i) => (
-                <span
-                  key={`${displayIndex}-${i}`}
-                  className="showcase-letter"
-                  style={{ transitionDelay: `${0.18 + i * 0.03}s` }}
-                >
-                  {letter}
-                </span>
-              ))}
-            </>
-          )}
+          <Link href={`/projects/${project.slug}`}>
+            {project.name.split("").map((letter, i) => (
+              <span
+                key={`${displayIndex}-${i}`}
+                className={`showcase-letter ${letter === " " ? "showcase-letter-space" : ""}`}
+                style={{ transitionDelay: `${0.18 + i * 0.03}s` }}
+              >
+                {letter === " " ? "\u00A0" : letter}
+              </span>
+            ))}
+          </Link>
         </div>
 
         <div
