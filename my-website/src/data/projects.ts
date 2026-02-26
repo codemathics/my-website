@@ -186,9 +186,8 @@ export const projects: ShowcaseProject[] = [
     description:
       "an AI company, backed by Y Combinator, that provides advanced, on-premise AI agents designed to replace traditional customer support call centers for large enterprises.",
     highlights: [
-      "creative direction",
       "video production + storytelling",
-      "brand narrative + motion design",
+      "creative direction",
     ],
   },
   {
