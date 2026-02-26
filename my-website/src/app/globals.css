@@ -22,7 +22,7 @@
   /* system font fallbacks (no network fetch) */
   --font-geist-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-geist-mono: ui-monospace, "Cascadia Code", "Source Code Pro", monospace;
-  --font-gochi-hand: "Comic Sans MS", "Chalkboard SE", cursive;
+  --font-gochi-hand: "Gochi Hand", cursive;
 }
 
 @theme inline {
