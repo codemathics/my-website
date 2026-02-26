@@ -17,7 +17,7 @@ export interface BookEntry {
   status: "read" | "reading" | "to-read";
 }
 
-// Book cards from Figma (Codemathics Design Playground) — titles are on the card images
+// book cards from figma (codemathics design playground) — titles are on the card images
 const books: BookEntry[] = [
   {
     id: "1",

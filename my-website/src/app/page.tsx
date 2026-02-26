@@ -4,44 +4,18 @@ import Lottie from "lottie-react";
 import quoteAnimation from "../../quote.json";
 import sfAnimation from "../../public/sf.json";
 import uaeAnimation from "../../public/uae.json";
-import ProjectShowcase, { ShowcaseProject } from "@/components/ProjectShowcase";
+import ProjectShowcase from "@/components/ProjectShowcase";
 import Navbar from "@/components/Navbar";
 import CityModal from "@/components/CityModal";
+import { getShowcaseProjects } from "@/data/projects";
 
-// projects data — blockradar and verisync; BLOCKRADAR Lottie loaded lazily in ProjectShowcase
-const projects: ShowcaseProject[] = [
-  {
-    name: "BLOCKRADAR",
-    description:
-      "blockradar is a stablecoin wallet infrastructure for fintechs, enabling secure custody,\nsettlement, and visibility across multi-chain payment flows.",
-    link: "https://blockradar.co",
-    highlights: [
-      "$350M+ processed volume post beta",
-      "0→1 product + brand + interaction",
-      "creative direction and motion design",
-    ],
-  },
-  {
-    name: "VERISYNC",
-    description:
-      "verisync is an identity verification platform that streamlines kyc/aml compliance for fintechs and banks across emerging markets.",
-    primaryImage: {
-      src: "https://res.cloudinary.com/dhajah4xb/image/upload/v1770023759/verisync_k9thto.png",
-      alt: "Verisync dashboard",
-    },
-    highlights: [
-      "end-to-end design system",
-      "50% faster onboarding flow",
-      "brand identity + product design",
-    ],
-  },
-];
+const projects = getShowcaseProjects();
 
 export default function Home() {
   const containerRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLImageElement>(null);
 
-  // spotlight: refs only so we never re-render from mouse/RAF
+  // spotlight: refs only so we never re-render from mouse/raf
   const centerX = typeof window !== "undefined" ? window.innerWidth / 2 : 960;
   const centerY = typeof window !== "undefined" ? window.innerHeight / 2.2 : 400;
   const mouseRef = useRef({ x: centerX, y: centerY });
@@ -118,7 +92,7 @@ export default function Home() {
     };
   }, []);
 
-  // spotlight: single RAF updates refs and sets hero mask directly (no React state → no re-renders)
+  // spotlight: single raf updates refs and sets hero mask directly (no react state → no re-renders)
   useEffect(() => {
     const targetLag = 0.06;
     const followEase = 0.08;
@@ -167,7 +141,7 @@ export default function Home() {
     return () => cancelAnimationFrame(rafId);
   }, [centerX, centerY]);
 
-  // hero styles based on scroll (mask is set by RAF in useEffect, not here)
+  // hero styles based on scroll (mask is set by raf in useeffect, not here)
   const heroImageStyle = {
     transform: isMobile ? undefined : `scale(${1 - heroScrollProgress * 0.08})`,
     transformOrigin: "center",
@@ -202,7 +176,7 @@ export default function Home() {
           isHeroPointerInsideRef.current = false;
         }}
       >
-        {/* headshot with spotlight mask (mask position updated in RAF, not React) */}
+        {/* headshot with spotlight mask (mask position updated in raf, not react) */}
         <div className="hero-image-wrap">
           <img
             ref={heroRef}
@@ -323,7 +297,9 @@ export default function Home() {
       </div>
 
       {/* projects */}
-      <ProjectShowcase projects={projects} />
+      <section id="project-section" aria-label="projects">
+        <ProjectShowcase projects={projects} />
+      </section>
 
       {/* city modal */}
       <CityModal

@@ -12,7 +12,7 @@ const nextConfig: NextConfig = {
   },
   webpack(config, { dev }) {
     if (dev) {
-      // ignore legacy node_modules folder during file-watching
+      // ignore legacy node_modules during file-watching
       const ignorePatterns = ["**/node_modules_old/**"];
       const existing = config.watchOptions?.ignored;
 
