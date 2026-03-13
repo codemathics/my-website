@@ -449,23 +449,23 @@ body::-webkit-scrollbar { display: none; }
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
-.showcase-title-area a {
-  color: inherit;
+.showcase-mockup-link {
+  display: block;
   text-decoration: none;
   transition: opacity 0.3s ease;
   cursor: pointer;
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .showcase-title-area a:hover {
-    opacity: 0.7;
+  .showcase-mockup-link:hover {
+    opacity: 0.85;
   }
 }
 
-/* hide default cursor only when hovering the letters inside .showcase-title-area (desktop pointer only) */
+/* hide default cursor only when hovering the image inside .showcase-mockups (desktop pointer only) */
 @media (hover: hover) and (pointer: fine) {
-  .showcase-title-area.showcase-title-area-cursor-active,
-  .showcase-title-area.showcase-title-area-cursor-active * {
+  .showcase-mockups.showcase-mockups-cursor-active,
+  .showcase-mockups.showcase-mockups-cursor-active * {
     cursor: none !important;
   }
 }
@@ -829,6 +829,71 @@ body::-webkit-scrollbar { display: none; }
   margin-right: auto;
 }
 
+.hero-quote-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.hero-quote-text {
+  font-family: var(--font-gochi-hand), 'Gochi Hand', cursive;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.375em;
+  color: #C9C9C9;
+  text-align: center;
+  margin: 0;
+}
+
+.hero-quote-letter {
+  display: inline-block;
+  opacity: 0;
+  filter: blur(4px);
+  transform: translateY(4px);
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hero-quote-letter-visible {
+  opacity: 1;
+  filter: blur(0);
+  transform: translateY(0);
+}
+
+.hero-quote-attribution {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hero-quote-attribution-visible {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 2s;
+}
+
+.hero-quote-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.hero-quote-author {
+  font-family: var(--font-gochi-hand), 'Gochi Hand', cursive;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.375em;
+  color: #C9C9C9;
+}
+
 .hero-content.fading-out {
   opacity: 0;
   transform: translateY(-40px) scale(0.98);
@@ -853,10 +918,6 @@ body::-webkit-scrollbar { display: none; }
 
   .hero-quote {
     max-width: 100%;
-  }
-
-  .hero-quote svg {
-    max-width: 100% !important;
   }
 
   .showcase-info {
@@ -1132,8 +1193,8 @@ body::-webkit-scrollbar { display: none; }
     margin-top: auto;
   }
 
-  .mobile-project-title a {
-    color: inherit;
+  .mobile-project-image-link {
+    display: block;
     text-decoration: none;
   }
 

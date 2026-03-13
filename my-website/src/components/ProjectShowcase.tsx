@@ -46,11 +46,7 @@ function MobileProjectCard({
         {ch === " " ? "\u00A0" : ch}
       </span>
     ));
-    return (
-      <Link href={`/projects/${project.slug}`}>
-        {letters}
-      </Link>
-    );
+    return letters;
   };
 
   return (
@@ -59,18 +55,20 @@ function MobileProjectCard({
       className={`mobile-project-card ${visible ? "mobile-project-visible" : ""}`}
     >
       {/* image */}
-      <div className="mobile-project-image">
-        {lottieData ? (
-          <div className="mobile-project-lottie">
-            <Lottie animationData={lottieData} loop autoplay />
-          </div>
-        ) : project.primaryImage ? (
-          <img
-            src={project.primaryImage.src}
-            alt={project.primaryImage.alt}
-          />
-        ) : null}
-      </div>
+      <Link href={`/projects/${project.slug}`} className="mobile-project-image-link">
+        <div className="mobile-project-image">
+          {lottieData ? (
+            <div className="mobile-project-lottie">
+              <Lottie animationData={lottieData} loop autoplay />
+            </div>
+          ) : project.primaryImage ? (
+            <img
+              src={project.primaryImage.src}
+              alt={project.primaryImage.alt}
+            />
+          ) : null}
+        </div>
+      </Link>
 
       {/* highlights */}
       {project.highlights && project.highlights.length > 0 && (
@@ -370,17 +368,6 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
     return null;
   };
 
-  const isOverTitleLetters = (e: React.PointerEvent) => {
-    const area = e.currentTarget;
-    const first = area.firstElementChild;
-    if (!first) return false;
-    const target = e.target as Node;
-    if (first.tagName === "A") return first.contains(target);
-    return (
-      (e.target as Element).classList?.contains("showcase-letter") ?? false
-    );
-  };
-
   return (
     <div
       ref={wrapperRef}
@@ -404,25 +391,10 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
           )}
         </div>
 
-        <div className="showcase-mockups">
-          <div className="showcase-mockup-stack">
-            <div className="showcase-primary-wrap">
-              {renderVisual(project, "showcase-img-primary", true)}
-            </div>
-
-            {nextProject && (
-              <div className="showcase-secondary-wrap">
-                {renderVisual(nextProject, "showcase-img-secondary")}
-              </div>
-            )}
-          </div>
-        </div>
-
         <div
-          className={`showcase-title-area ${clickIndicator.visible ? "showcase-title-area-cursor-active" : ""}`}
+          className={`showcase-mockups ${clickIndicator.visible ? "showcase-mockups-cursor-active" : ""}`}
           onPointerEnter={(e) => {
             if (e.pointerType !== "mouse") return;
-            if (!isOverTitleLetters(e)) return;
             setClickIndicator({
               visible: true,
               x: e.clientX,
@@ -437,29 +409,39 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
               setClickIndicator((p) => ({ ...p, visible: false }));
               return;
             }
-            if (isOverTitleLetters(e)) {
-              setClickIndicator((p) => ({
-                ...p,
-                x: e.clientX,
-                y: e.clientY,
-                visible: true,
-              }));
-            } else {
-              setClickIndicator((p) => ({ ...p, visible: false }));
-            }
+            setClickIndicator((p) => ({
+              ...p,
+              x: e.clientX,
+              y: e.clientY,
+              visible: true,
+            }));
           }}
         >
-          <Link href={`/projects/${project.slug}`}>
-            {project.name.split("").map((letter, i) => (
-              <span
-                key={`${displayIndex}-${i}`}
-                className={`showcase-letter ${letter === " " ? "showcase-letter-space" : ""}`}
-                style={{ transitionDelay: `${0.18 + i * 0.03}s` }}
-              >
-                {letter === " " ? "\u00A0" : letter}
-              </span>
-            ))}
+          <Link href={`/projects/${project.slug}`} className="showcase-mockup-link">
+            <div className="showcase-mockup-stack">
+              <div className="showcase-primary-wrap">
+                {renderVisual(project, "showcase-img-primary", true)}
+              </div>
+
+              {nextProject && (
+                <div className="showcase-secondary-wrap">
+                  {renderVisual(nextProject, "showcase-img-secondary")}
+                </div>
+              )}
+            </div>
           </Link>
+        </div>
+
+        <div className="showcase-title-area">
+          {project.name.split("").map((letter, i) => (
+            <span
+              key={`${displayIndex}-${i}`}
+              className={`showcase-letter ${letter === " " ? "showcase-letter-space" : ""}`}
+              style={{ transitionDelay: `${0.18 + i * 0.03}s` }}
+            >
+              {letter === " " ? "\u00A0" : letter}
+            </span>
+          ))}
         </div>
 
         <div
