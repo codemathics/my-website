@@ -1,7 +1,6 @@
 "use client";
 import React, { useRef, useCallback, useEffect } from "react";
 import Lottie from "lottie-react";
-import quoteAnimation from "../../quote.json";
 import sfAnimation from "../../public/sf.json";
 import uaeAnimation from "../../public/uae.json";
 import ProjectShowcase from "@/components/ProjectShowcase";
@@ -195,13 +194,30 @@ export default function Home() {
           style={heroContentStyle}
         >
           <div className="hero-content-inner flex flex-col items-center space-y-8 pb-16">
-            {/* quote animation */}
-            <div className={`hero-quote transition-all duration-700 ${showQuote ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
-              <Lottie
-                animationData={quoteAnimation}
-                style={{ width: 600, height: 60 }}
-                loop={false}
-              />
+            {/* quote */}
+            <div className="hero-quote">
+              <div className="hero-quote-content">
+                <p className="hero-quote-text" aria-label={"\u201CClement has a great eye for detail, and is a joy to work with\u201D"}>
+                  {"\u201CClement has a great eye for detail, and is a joy to work with\u201D".split("").map((ch, i) => (
+                    <span
+                      key={i}
+                      className={`hero-quote-letter ${showQuote ? "hero-quote-letter-visible" : ""}`}
+                      style={{ transitionDelay: showQuote ? `${i * 0.03}s` : "0s" }}
+                      aria-hidden="true"
+                    >
+                      {ch === " " ? "\u00A0" : ch}
+                    </span>
+                  ))}
+                </p>
+                <div className={`hero-quote-attribution ${showQuote ? "hero-quote-attribution-visible" : ""}`}>
+                  <img
+                    src="/fons-mans.png"
+                    alt="Fons Mans"
+                    className="hero-quote-avatar"
+                  />
+                  <span className="hero-quote-author">Fons Mans, Creative Director, Offgrid</span>
+                </div>
+              </div>
             </div>
 
             {/* bio text */}
