@@ -302,11 +302,23 @@ export default function Home() {
               </div>
             </div>
 
-            {/* portfolio button */}
-            <div className={`transition-all duration-700 delay-600 ${showText ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
-              <button className="btn-primary pointer-events-auto">
-                <a href="https://codemathics.design/portfolio">my portfolio</a>
-              </button>
+            {/* scroll indicator */}
+            <div
+              className={`hero-scroll-indicator pointer-events-auto transition-all duration-700 delay-600 ${showText ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
+              onClick={() => document.getElementById("project-section")?.scrollIntoView({ behavior: "smooth" })}
+            >
+              <span className="hero-scroll-text">view projects</span>
+              <div className="hero-scroll-arrows">
+                <svg width="16" height="8" viewBox="0 0 16 8" fill="none" className="hero-scroll-arrow hero-scroll-arrow-1">
+                  <path d="M1 1L8 7L15 1" stroke="rgba(255,255,255,0.6)" strokeWidth="0.78" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <svg width="16" height="8" viewBox="0 0 16 8" fill="none" className="hero-scroll-arrow hero-scroll-arrow-2">
+                  <path d="M1 1L8 7L15 1" stroke="rgba(255,255,255,0.4)" strokeWidth="0.78" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <svg width="16" height="8" viewBox="0 0 16 8" fill="none" className="hero-scroll-arrow hero-scroll-arrow-3">
+                  <path d="M1 1L8 7L15 1" stroke="rgba(255,255,255,0.2)" strokeWidth="0.78" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
             </div>
           </div>
         </div>

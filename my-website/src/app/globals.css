@@ -99,6 +99,74 @@ body::-webkit-scrollbar { display: none; }
   }
 }
 
+/* ─── hero scroll indicator ──────────────────────────── */
+
+.hero-scroll-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  animation: heroScrollFloat 3s ease-in-out infinite;
+}
+
+.hero-scroll-text {
+  font-family: 'Helvetica Now Display', sans-serif;
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 1.375em;
+  letter-spacing: -0.014em;
+  color: rgba(201, 201, 201, 0.6);
+  text-align: center;
+}
+
+.hero-scroll-arrows {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: -2px;
+}
+
+.hero-scroll-arrow {
+  display: block;
+  margin-top: -2px;
+}
+
+.hero-scroll-arrow-1 {
+  animation: arrowPulse1 2.4s ease-in-out infinite;
+}
+
+.hero-scroll-arrow-2 {
+  animation: arrowPulse2 2.4s ease-in-out infinite;
+}
+
+.hero-scroll-arrow-3 {
+  animation: arrowPulse3 2.4s ease-in-out infinite;
+}
+
+@keyframes heroScrollFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(5px); }
+}
+
+@keyframes arrowPulse1 {
+  0%, 100% { opacity: 0.3; transform: translateY(-1px); }
+  30%      { opacity: 1;   transform: translateY(2px); }
+  60%      { opacity: 0.3; transform: translateY(-1px); }
+}
+
+@keyframes arrowPulse2 {
+  0%, 100% { opacity: 0.2; transform: translateY(-1px); }
+  40%      { opacity: 0.8; transform: translateY(2px); }
+  70%      { opacity: 0.2; transform: translateY(-1px); }
+}
+
+@keyframes arrowPulse3 {
+  0%, 100% { opacity: 0.1; transform: translateY(-1px); }
+  50%      { opacity: 0.5; transform: translateY(2px); }
+  80%      { opacity: 0.1; transform: translateY(-1px); }
+}
+
 /* ─── project showcase (scroll-driven multi-project) ─── */
 
 .project-showcase-wrapper {
