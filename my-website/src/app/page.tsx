@@ -310,13 +310,13 @@ export default function Home() {
               <span className="hero-scroll-text">view projects</span>
               <div className="hero-scroll-arrows">
                 <svg width="16" height="8" viewBox="0 0 16 8" fill="none" className="hero-scroll-arrow hero-scroll-arrow-1">
-                  <path d="M1 1L8 7L15 1" stroke="rgba(255,255,255,0.6)" strokeWidth="0.78" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M1 1L8 7L15 1" stroke="rgba(255,255,255,0.8)" strokeWidth="0.78" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
                 <svg width="16" height="8" viewBox="0 0 16 8" fill="none" className="hero-scroll-arrow hero-scroll-arrow-2">
-                  <path d="M1 1L8 7L15 1" stroke="rgba(255,255,255,0.4)" strokeWidth="0.78" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M1 1L8 7L15 1" stroke="rgba(255,255,255,0.6)" strokeWidth="0.78" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
                 <svg width="16" height="8" viewBox="0 0 16 8" fill="none" className="hero-scroll-arrow hero-scroll-arrow-3">
-                  <path d="M1 1L8 7L15 1" stroke="rgba(255,255,255,0.2)" strokeWidth="0.78" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M1 1L8 7L15 1" stroke="rgba(255,255,255,0.4)" strokeWidth="0.78" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
             </div>
