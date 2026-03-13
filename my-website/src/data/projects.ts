@@ -144,6 +144,18 @@ export const projects: ShowcaseProject[] = [
     ],
   },
   {
+    name: "OFFGRID",
+    slug: "offgrid",
+    primaryImage: { src: "/bgOffgrid.png", alt: "Offgrid" },
+    description:
+      "Offgrid is a Dutch design studio by Fons Mans. We create bold identities, striking campaigns, and sticky interfaces for companies shaping tomorrow. Clients include Lovable, Intercom, Meta, Cosmos, and Loops.",
+    highlights: [
+      "senior interaction designer",
+      "design system architecture",
+      "micro-interactions + motion",
+    ],
+  },
+  {
     name: "PAYCREST",
     slug: "paycrest",
     primaryImage: { src: "/bgPaycrest.png", alt: "Paycrest" },
@@ -165,18 +177,6 @@ export const projects: ShowcaseProject[] = [
       "seamless payment experience",
       "product design + UX strategy",
       "visual identity system",
-    ],
-  },
-  {
-    name: "OFFGRID",
-    slug: "offgrid",
-    primaryImage: { src: "/bgOffgrid.png", alt: "Offgrid" },
-    description:
-      "Offgrid is a Dutch design studio by Fons Mans. We create bold identities, striking campaigns, and sticky interfaces for companies shaping tomorrow. Clients include Lovable, Intercom, Meta, Cosmos, and Loops.",
-    highlights: [
-      "senior interaction designer",
-      "design system architecture",
-      "micro-interactions + motion",
     ],
   },
   {
