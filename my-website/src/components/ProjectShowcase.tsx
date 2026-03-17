@@ -13,10 +13,8 @@ interface ProjectShowcaseProps {
 
 function MobileProjectCard({
   project,
-  index,
 }: {
   project: ShowcaseProject;
-  index: number;
 }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
@@ -322,7 +320,7 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
     return (
       <div className="mobile-projects-wrapper">
         {projects.map((project, i) => (
-          <MobileProjectCard key={i} project={project} index={i} />
+          <MobileProjectCard key={i} project={project} />
         ))}
       </div>
     );
@@ -345,8 +343,7 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
 
   const renderVisual = (
     p: ShowcaseProject,
-    className: string,
-    isCurrent = false
+    className: string
   ) => {
     const lottieData = p.primaryLottie ?? null;
     if (lottieData) {
@@ -420,7 +417,7 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
           <Link href={`/projects/${project.slug}`} className="showcase-mockup-link">
             <div className="showcase-mockup-stack">
               <div className="showcase-primary-wrap">
-                {renderVisual(project, "showcase-img-primary", true)}
+                {renderVisual(project, "showcase-img-primary")}
               </div>
 
               {nextProject && (
