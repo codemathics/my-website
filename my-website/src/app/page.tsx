@@ -15,11 +15,9 @@ export default function Home() {
   const heroRef = useRef<HTMLImageElement>(null);
 
   // spotlight: refs only so we never re-render from mouse/raf
-  const centerX = typeof window !== "undefined" ? window.innerWidth / 2 : 960;
-  const centerY = typeof window !== "undefined" ? window.innerHeight / 2.2 : 400;
-  const mouseRef = useRef({ x: centerX, y: centerY });
-  const smoothedTargetRef = useRef({ x: centerX, y: centerY });
-  const currentRef = useRef({ x: centerX, y: centerY });
+  const mouseRef = useRef({ x: 960, y: 400 });
+  const smoothedTargetRef = useRef({ x: 960, y: 400 });
+  const currentRef = useRef({ x: 960, y: 400 });
   const hasUserMovedRef = useRef(false);
   const isHeroPointerInsideRef = useRef(false);
   const entranceCompleteRef = useRef(false);
@@ -103,8 +101,10 @@ export default function Home() {
         hasUserMovedRef.current &&
         isHeroPointerInsideRef.current;
       const mouse = mouseRef.current;
-      const immediateX = hasMoved ? mouse.x : centerX;
-      const immediateY = hasMoved ? mouse.y : centerY;
+      const cx = window.innerWidth / 2;
+      const cy = window.innerHeight / 2.2;
+      const immediateX = hasMoved ? mouse.x : cx;
+      const immediateY = hasMoved ? mouse.y : cy;
 
       const prevSmoothed = smoothedTargetRef.current;
       smoothedTargetRef.current = {
@@ -138,7 +138,7 @@ export default function Home() {
 
     rafId = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(rafId);
-  }, [centerX, centerY]);
+  }, []);
 
   // hero styles based on scroll (mask is set by raf in useeffect, not here)
   const heroImageStyle = {
@@ -197,17 +197,29 @@ export default function Home() {
             {/* quote */}
             <div className="hero-quote">
               <div className="hero-quote-content">
-                <p className="hero-quote-text" aria-label={"\u201CClement has a great eye for detail, and is a joy to work with\u201D"}>
-                  {"\u201CClement has a great eye for detail, and is a joy to work with\u201D".split("").map((ch, i) => (
-                    <span
-                      key={i}
-                      className={`hero-quote-letter ${showQuote ? "hero-quote-letter-visible" : ""}`}
-                      style={{ transitionDelay: showQuote ? `${i * 0.03}s` : "0s" }}
-                      aria-hidden="true"
-                    >
-                      {ch === " " ? "\u00A0" : ch}
-                    </span>
-                  ))}
+                <p className="hero-quote-text" aria-label={"\u201CClement has a great eye for detail, and he is a joy to work with\u201D"}>
+                  {(() => {
+                    const lines = ["\u201CClement has a great eye for detail,", "and he is a joy to work with\u201D"];
+                    let offset = 0;
+                    return lines.map((line, li) => {
+                      const lineOffset = offset;
+                      offset += line.length;
+                      return (
+                        <span key={li} className="hero-quote-line">
+                          {line.split("").map((ch, i) => (
+                            <span
+                              key={lineOffset + i}
+                              className={`hero-quote-letter ${showQuote ? "hero-quote-letter-visible" : ""}`}
+                              style={{ transitionDelay: showQuote ? `${(lineOffset + i) * 0.03}s` : "0s" }}
+                              aria-hidden="true"
+                            >
+                              {ch === " " ? "\u00A0" : ch}
+                            </span>
+                          ))}
+                        </span>
+                      );
+                    });
+                  })()}
                 </p>
                 <div className={`hero-quote-attribution ${showQuote ? "hero-quote-attribution-visible" : ""}`}>
                   <img
