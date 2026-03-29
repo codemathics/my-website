@@ -25,7 +25,7 @@ export const metadata: Metadata = {
         url: "/og.png",
         width: 1200,
         height: 630,
-        alt: "Clement Hugbo - Product Designer & Creative Director",
+        alt: "clement hugbo - product designer & creative director",
       },
     ],
     type: "website",
