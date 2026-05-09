@@ -71,8 +71,15 @@ function MobileProjectCard({
       {/* highlights */}
       {project.highlights && project.highlights.length > 0 && (
         <div className="mobile-project-highlights">
-          {project.highlights.map((h) => (
-            <div key={h} className="project-highlight">
+          {project.highlights.map((h, index) => (
+            <div
+              key={h}
+              className={`project-highlight ${
+                project.slug === "coderabbit" && index === 0
+                  ? "project-highlight-current"
+                  : ""
+              }`}
+            >
               <span className="project-highlight-icon" />
               <span className="project-highlight-text">{h}</span>
             </div>
@@ -378,8 +385,15 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
           <p className="showcase-description">{project.description}</p>
           {project.highlights && project.highlights.length > 0 && (
             <div className="showcase-highlights">
-              {project.highlights.map((h) => (
-                <div key={h} className="project-highlight">
+              {project.highlights.map((h, index) => (
+                <div
+                  key={h}
+                  className={`project-highlight ${
+                    project.slug === "coderabbit" && index === 0
+                      ? "project-highlight-current"
+                      : ""
+                  }`}
+                >
                   <span className="project-highlight-icon" />
                   <span className="project-highlight-text">{h}</span>
                 </div>
