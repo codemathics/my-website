@@ -131,6 +131,19 @@ export interface CaseStudyData {
 
 export const projects: ShowcaseProject[] = [
   {
+    name: "CODERABBIT",
+    slug: "coderabbit",
+    primaryImage: { src: "/bgCoderabbit.gif", alt: "CodeRabbit" },
+    description:
+      "coderabbit is an ai-powered code review platform that helps engineering teams ship faster\nwith automated, context-aware reviews across pull requests and developer workflows.",
+    link: "https://coderabbit.ai",
+    highlights: [
+      "current role: senior product designer",
+      "core product + internal tools",
+      "visual, motion + interaction",
+    ],
+  },
+  {
     name: "BLOCKRADAR",
     slug: "blockradar",
     primaryImage: { src: "/bgbr.png", alt: "Blockradar" },
@@ -255,6 +268,85 @@ export const projects: ShowcaseProject[] = [
 /* ── full case study data for project pages ── */
 
 export const caseStudies: CaseStudyData[] = [
+  {
+    slug: "coderabbit",
+    name: "CodeRabbit",
+    heroImage: PLACEHOLDERS.hero[0],
+    headline: "Designing the future of ai-powered code review",
+    role: "Senior Product Designer",
+    timeline: "2026 - Present",
+    team: ["Clement Hugbo", "CodeRabbit Team"],
+    skills: [
+      "Product Design",
+      "Interaction Design",
+      "Visual Design",
+      "Graphic Design",
+      "Motion Design",
+    ],
+    overview:
+      "At CodeRabbit, I lead design for core product features and internal tooling, shaping how engineering teams experience ai-powered code review. My work spans product, visual, graphic, motion, and interaction design — translating complex ai capabilities into developer workflows that feel fast, trustworthy, and intuitive.",
+    problem: {
+      title: "AI code review needs to feel like a teammate, not a tool",
+      description:
+        "Code review is one of the highest-stakes moments in software development — it's where quality, intent, and trust intersect. As ai becomes embedded in this workflow, the design challenge is making suggestions feel collaborative rather than mechanical, transparent rather than opaque, and useful at the exact moment a developer needs them.",
+      question:
+        "How do we design ai code review experiences that developers actually trust and rely on?",
+    },
+    research: {
+      title: "Understanding developer review behaviors",
+      insights: [
+        {
+          image: PLACEHOLDERS.insight[0],
+          caption:
+            "Placeholder insight — research findings on how engineering teams currently approach code review and where ai can add the most value will be added here.",
+        },
+        {
+          image: PLACEHOLDERS.insight[1],
+          caption:
+            "Placeholder insight — observations on internal tooling needs across the team and how design improves day-to-day developer experience.",
+        },
+      ],
+    },
+    solution: {
+      title: "Designing across product, brand, and motion",
+      steps: [
+        {
+          title: "Core product features",
+          image: PLACEHOLDERS.step[0],
+          description:
+            "Placeholder — leading design for core product features that shape how teams experience ai-powered code review across pull requests, repositories, and team workflows.",
+        },
+        {
+          title: "Internal tooling products",
+          image: PLACEHOLDERS.step[1],
+          description:
+            "Placeholder — designing internal tooling that enables the team to ship faster and work smarter, treating internal users with the same care as external customers.",
+        },
+        {
+          title: "Visual, graphic, motion + interaction",
+          image: PLACEHOLDERS.step[2],
+          description:
+            "Placeholder — driving the broader visual and motion language across the product and brand surface, including interaction patterns that bring the ai experience to life.",
+        },
+      ],
+    },
+    learnings: {
+      title: "Key Takeaways",
+      images: [PLACEHOLDERS.learning[0], PLACEHOLDERS.learning[1]],
+      items: [
+        {
+          title: "Placeholder learning",
+          description:
+            "This case study is a work in progress — full learnings, takeaways, and impact will be documented here as the work evolves.",
+        },
+        {
+          title: "Placeholder learning",
+          description:
+            "Detailed write-ups across product, internal tooling, and creative direction at CodeRabbit will be added incrementally.",
+        },
+      ],
+    },
+  },
   {
     slug: "blockradar",
     name: "Blockradar",
