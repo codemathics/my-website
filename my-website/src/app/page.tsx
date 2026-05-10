@@ -188,55 +188,60 @@ export default function Home() {
           />
         </div>
 
+        {/* quote: top-right (same scroll fade as hero content) */}
+        <div
+          className="pointer-events-none hero-quote-shell"
+          style={heroContentStyle}
+        >
+          <div className="hero-quote">
+            <div className="hero-quote-content">
+              <p className="hero-quote-text" aria-label={"\u201CClement has a great eye for detail, and he is a joy to work with\u201D"}>
+                {(() => {
+                  const lines = ["\u201CClement has a great eye for detail,", "and he is a joy to work with\u201D"];
+                  let offset = 0;
+                  return lines.map((line, li) => {
+                    const lineOffset = offset;
+                    offset += line.length;
+                    return (
+                      <span key={li} className="hero-quote-line">
+                        {line.split("").map((ch, i) => (
+                          <span
+                            key={lineOffset + i}
+                            className={`hero-quote-letter ${showQuote ? "hero-quote-letter-visible" : ""}`}
+                            style={{ transitionDelay: showQuote ? `${(lineOffset + i) * 0.03}s` : "0s" }}
+                            aria-hidden="true"
+                          >
+                            {ch === " " ? "\u00A0" : ch}
+                          </span>
+                        ))}
+                      </span>
+                    );
+                  });
+                })()}
+              </p>
+              <div className={`hero-quote-attribution ${showQuote ? "hero-quote-attribution-visible" : ""}`}>
+                <img
+                  src="/fons-mans.png"
+                  alt="Fons Mans"
+                  className="hero-quote-avatar"
+                />
+                <span className="hero-quote-author">Fons Mans, Creative Director, Offgrid</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* content overlay */}
         <div
           className={`absolute inset-0 flex flex-col justify-end ${isMobile ? "p-4" : "p-8"} pointer-events-none hero-content`}
           style={heroContentStyle}
         >
           <div className="hero-content-inner flex flex-col items-center space-y-8 pb-16">
-            {/* quote */}
-            <div className="hero-quote">
-              <div className="hero-quote-content">
-                <p className="hero-quote-text" aria-label={"\u201CClement has a great eye for detail, and he is a joy to work with\u201D"}>
-                  {(() => {
-                    const lines = ["\u201CClement has a great eye for detail,", "and he is a joy to work with\u201D"];
-                    let offset = 0;
-                    return lines.map((line, li) => {
-                      const lineOffset = offset;
-                      offset += line.length;
-                      return (
-                        <span key={li} className="hero-quote-line">
-                          {line.split("").map((ch, i) => (
-                            <span
-                              key={lineOffset + i}
-                              className={`hero-quote-letter ${showQuote ? "hero-quote-letter-visible" : ""}`}
-                              style={{ transitionDelay: showQuote ? `${(lineOffset + i) * 0.03}s` : "0s" }}
-                              aria-hidden="true"
-                            >
-                              {ch === " " ? "\u00A0" : ch}
-                            </span>
-                          ))}
-                        </span>
-                      );
-                    });
-                  })()}
-                </p>
-                <div className={`hero-quote-attribution ${showQuote ? "hero-quote-attribution-visible" : ""}`}>
-                  <img
-                    src="/fons-mans.png"
-                    alt="Fons Mans"
-                    className="hero-quote-avatar"
-                  />
-                  <span className="hero-quote-author">Fons Mans, Creative Director, Offgrid</span>
-                </div>
-              </div>
-            </div>
-
             {/* bio text */}
-            <div className={`transition-all duration-700 delay-400 ${showText ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
+            <div className={`hero-bio transition-all duration-700 delay-400 ${showText ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
               <div className="text-center max-w-2xl leading-relaxed pointer-events-auto main-text">
                 <div className={`transition-all duration-500 ${showLine1 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}>
-                  Clement is a product designer and creative director based in{" "}
+                  product designer and creative director based in{" "}
 
                   {/* san francisco — shimmer on mobile, flag on desktop */}
                   <span
@@ -251,7 +256,7 @@ export default function Home() {
                     {/* usa flag — desktop only */}
                     {!isMobile && (
                       <div
-                        className={`absolute -top-12 left-1/2 transform -translate-x-1/2 transition-all duration-300 ease-out ${
+                        className={`hero-city-flag absolute left-1/2 transform -translate-x-1/2 transition-all duration-300 ease-out ${
                           !sfFlagInteracted && hoveredCity !== "dubai"
                             ? "opacity-100 scale-100 translate-y-0"
                             : hoveredCity === "san-francisco"
@@ -290,7 +295,7 @@ export default function Home() {
                     {/* uae flag — desktop only */}
                     {!isMobile && (
                       <div
-                        className={`absolute -top-12 left-1/2 transform -translate-x-1/2 transition-all duration-300 ease-out ${
+                        className={`hero-city-flag absolute left-1/2 transform -translate-x-1/2 transition-all duration-300 ease-out ${
                           hoveredCity === "dubai"
                             ? "opacity-100 scale-100 translate-y-0"
                             : "opacity-0 scale-75 translate-y-2"
