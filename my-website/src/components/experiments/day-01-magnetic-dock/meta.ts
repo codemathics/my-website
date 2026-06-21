@@ -10,4 +10,5 @@ export const meta: ExperimentMeta = {
   accent: "#5B8DEF",
   sourcePath:
     "src/components/experiments/day-01-magnetic-dock/MagneticDock.tsx",
+  figmaUrl: "https://www.figma.com/community/file/1650591381727103571",
 };

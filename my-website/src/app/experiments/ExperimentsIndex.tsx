@@ -23,7 +23,7 @@ export default function ExperimentsIndex() {
           rive or jitter, then built out in claude or cursor.
         </p>
         <p className="exp-count">
-          {String(experiments.length).padStart(2, "0")} / 30 shipped
+          {String(experiments.length).padStart(2, "0")} / 100 shipped
         </p>
       </header>
 
