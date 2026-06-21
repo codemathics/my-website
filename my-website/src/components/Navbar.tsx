@@ -16,6 +16,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: "home", href: "/", isRoute: true },
   { label: "about", href: "/about", isRoute: true },
+  { label: "experiments", href: "/experiments", isRoute: true },
   { label: "articles", href: "https://codemathics.substack.com/", isRoute: false, isExternal: true },
   { label: "books", href: "/books", isRoute: true },
 ];
@@ -164,7 +165,9 @@ export default function Navbar({ showLogo = true, showNav = true }: NavbarProps)
                 item={item}
                 isActive={
                   item.isRoute
-                    ? pathname === item.href
+                    ? item.href === "/"
+                      ? pathname === "/"
+                      : pathname === item.href || pathname.startsWith(`${item.href}/`)
                     : false
                 }
               />
@@ -224,7 +227,11 @@ export default function Navbar({ showLogo = true, showNav = true }: NavbarProps)
               key={item.label}
               item={item}
               isActive={
-                item.isRoute ? pathname === item.href : false
+                item.isRoute
+                  ? item.href === "/"
+                    ? pathname === "/"
+                    : pathname === item.href || pathname.startsWith(`${item.href}/`)
+                  : false
               }
               onClick={closeMenu}
             />

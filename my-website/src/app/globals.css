@@ -896,7 +896,16 @@ body::-webkit-scrollbar { display: none; }
 .hero-image-wrap {
   position: absolute;
   inset: 0;
+  perspective: 1400px;
   animation: hero-image-scale-in 1.1s cubic-bezier(0.22, 1, 0.36, 1) 0.45s forwards;
+}
+
+/* the headshot, leaned toward the cursor (parallax) in raf */
+.hero-portrait {
+  position: absolute;
+  inset: 0;
+  transform-origin: center center;
+  will-change: transform;
 }
 
 .hero-content {

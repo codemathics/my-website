@@ -1,7 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  turbopack: {},
+  // pin the workspace root — a stray lockfile in a parent dir otherwise makes
+  // turbopack infer the wrong root and fail to resolve tailwindcss.
+  turbopack: {
+    root: import.meta.dirname,
+  },
   images: {
     remotePatterns: [
       {

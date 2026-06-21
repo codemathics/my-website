@@ -50,3 +50,7 @@ public/icon.png
 *.tsbuildinfo
 next-env.d.ts
 .DS_Store
+
+# local-only tooling + logs
+.claude/
+dev-explorations*.log

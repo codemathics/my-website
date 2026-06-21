@@ -1,0 +1,322 @@
+/* ─── experiments section ───────────────────────────── */
+
+.exp-page {
+  min-height: 100vh;
+  background: #010101;
+  color: #c9c9c9;
+  font-family: 'Helvetica Now Display', ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+.exp-shell {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 132px 28px 120px;
+}
+
+/* ─── index header ───────────────────────────────────── */
+
+.exp-head {
+  margin-bottom: 56px;
+}
+.exp-title {
+  font-size: clamp(36px, 6vw, 60px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #f2f2f2;
+  line-height: 1.02;
+}
+.exp-lede {
+  margin-top: 18px;
+  max-width: 560px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #8c8c8c;
+}
+.exp-count {
+  margin-top: 22px;
+  font-size: 13px;
+  color: #5a5a5a;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── grid ───────────────────────────────────────────── */
+
+.exp-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 22px;
+}
+@media (max-width: 760px) {
+  .exp-grid { grid-template-columns: 1fr; }
+}
+
+.exp-card {
+  position: relative;
+  display: block;
+  border-radius: 22px;
+  border: 1px solid rgba(255,255,255,0.07);
+  background: #0b0b0b;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+}
+.exp-card-canvas {
+  position: relative;
+  height: 280px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 120% at 50% 0%, #161616 0%, #0a0a0a 70%);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+/* dot grid, same texture as the live stage, fading out toward the edges */
+.exp-card-canvas::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(255,255,255,0.065) 1px, transparent 1.2px);
+  background-size: 20px 20px;
+  mask-image: radial-gradient(82% 78% at 50% 42%, #000 6%, rgba(0,0,0,0.5) 44%, transparent 80%);
+  -webkit-mask-image: radial-gradient(82% 78% at 50% 42%, #000 6%, rgba(0,0,0,0.5) 44%, transparent 80%);
+}
+/* previews sit at rest; the card is the clickable surface, not the component. */
+.exp-card-preview {
+  pointer-events: none;
+  transform: scale(0.66);
+  transform-origin: center;
+}
+.exp-card-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 22px 20px;
+}
+.exp-card-left { display: flex; flex-direction: column; gap: 5px; }
+.exp-card-day {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: #5a5a5a;
+  font-variant-numeric: tabular-nums;
+}
+.exp-card-name {
+  font-size: 19px;
+  font-weight: 600;
+  color: #ededed;
+  letter-spacing: -0.01em;
+}
+/* subtle, monochrome tag — quiet enough to sit with the rest of the site */
+.exp-tag {
+  flex: none;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  padding: 4px 10px;
+  border-radius: 7px;
+  border: 1px solid rgba(255,255,255,0.09);
+  color: #8a8a8a;
+  background: rgba(255,255,255,0.02);
+}
+
+/* ─── detail page ────────────────────────────────────── */
+
+.exp-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #888;
+  text-decoration: none;
+  margin-bottom: 34px;
+  transition: color 0.2s;
+}
+.exp-back:hover { color: #ddd; }
+
+.exp-detail-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+.exp-detail-title {
+  font-size: clamp(30px, 5vw, 46px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #f2f2f2;
+  line-height: 1.05;
+}
+/* quiet meta row beneath the description — keeps the title as the start point */
+.exp-detail-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 22px;
+}
+.exp-detail-index {
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: #6a6a6a;
+  font-variant-numeric: tabular-nums;
+}
+.exp-detail-desc {
+  margin-top: 16px;
+  max-width: 620px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #8c8c8c;
+}
+
+.exp-actions {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.exp-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  border-radius: 9px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.025);
+  color: #d6d6d6;
+  font-size: 12.5px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+.exp-action:hover {
+  border-color: rgba(255,255,255,0.22);
+  background: rgba(255,255,255,0.05);
+  color: #fff;
+}
+
+/* live stage */
+.exp-stage {
+  position: relative;
+  margin: 14px 0 40px;
+  min-height: 520px;
+  display: grid;
+  place-items: center;
+  justify-content: center;
+  border-radius: 24px;
+  border: 1px solid rgba(255,255,255,0.07);
+  background:
+    radial-gradient(130% 120% at 50% 0%, #141414 0%, #080808 72%);
+  overflow: hidden;
+}
+.exp-stage-grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 1;
+  /* denser, finer dot grid - lighter so it never competes with the component */
+  background-image: radial-gradient(rgba(255,255,255,0.065) 1px, transparent 1.2px);
+  background-size: 20px 20px;
+  /* stronger, softer edge fade so the surroundings fall away around the focus */
+  mask-image: radial-gradient(72% 66% at 50% 50%, #000 8%, rgba(0,0,0,0.5) 42%, transparent 72%);
+  -webkit-mask-image: radial-gradient(72% 66% at 50% 50%, #000 8%, rgba(0,0,0,0.5) 42%, transparent 72%);
+}
+
+/* ─── code block ─────────────────────────────────────── */
+
+.exp-code {
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: #0c0c0c;
+  overflow: hidden;
+}
+.exp-code-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.exp-code-file {
+  font-family: ui-monospace, "Cascadia Code", monospace;
+  font-size: 13px;
+  color: #8a8a8a;
+}
+.exp-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 13px;
+  border-radius: 9px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.03);
+  color: #cfcfcf;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+.exp-copy:hover { border-color: rgba(255,255,255,0.25); color: #fff; }
+.exp-copy[data-copied="true"] { border-color: rgba(95,191,143,0.5); color: #7fd6a6; }
+
+.exp-code-scroll {
+  max-height: 560px;
+  overflow: auto;
+  font-size: 13px;
+  /* custom scrollbar - subtle pill thumb on a transparent track (firefox) */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.16) transparent;
+}
+/* custom scrollbar (webkit) */
+.exp-code-scroll::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+.exp-code-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.exp-code-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.12);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+.exp-code-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.22);
+  background-clip: content-box;
+}
+.exp-code-scroll::-webkit-scrollbar-corner {
+  background: transparent;
+}
+.exp-code-scroll pre {
+  margin: 0;
+  padding: 20px 22px;
+  background: transparent !important;
+}
+.exp-code-scroll code { font-family: ui-monospace, "Cascadia Code", "Source Code Pro", monospace; }
+
+/* ─── prev / next ────────────────────────────────────── */
+
+.exp-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 40px;
+}
+.exp-nav-link {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 16px 20px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.07);
+  background: #0b0b0b;
+  text-decoration: none;
+  color: inherit;
+  min-width: 180px;
+  transition: border-color 0.2s;
+}
+.exp-nav-link:hover { border-color: rgba(255,255,255,0.2); }
+.exp-nav-link[data-dir="next"] { align-items: flex-end; text-align: right; }
+.exp-nav-dir { font-size: 11px; letter-spacing: 0.08em; color: #5a5a5a; }
+.exp-nav-name { font-size: 15px; font-weight: 600; color: #e2e2e2; }
+.exp-nav-spacer { flex: 1; }

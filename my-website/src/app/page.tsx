@@ -10,9 +10,17 @@ import { getShowcaseProjects } from "@/data/projects";
 
 const projects = getShowcaseProjects();
 
+const HEADSHOT_SRC =
+  "https://res.cloudinary.com/dhajah4xb/image/upload/v1758094446/headShot1_buzn8d.png";
+
 export default function Home() {
   const containerRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLImageElement>(null);
+
+  // parallax: the portrait leans toward the cursor. driven in the same raf as
+  // the spotlight so nothing re-renders from the cursor.
+  const portraitRef = useRef<HTMLDivElement>(null);
+  const parallaxRef = useRef({ x: 0, y: 0 });
 
   // spotlight: refs only so we never re-render from mouse/raf
   const mouseRef = useRef({ x: 960, y: 400 });
@@ -119,15 +127,33 @@ export default function Home() {
         y: prevCurrent.y + (smoothed.y - prevCurrent.y) * followEase,
       };
 
+      // ---- parallax: the portrait leans toward the cursor ----
+      const isMobileNow = isMobileRef.current;
+      const cxv = window.innerWidth / 2;
+      const cyv = window.innerHeight / 2;
+      const nx = hasMoved ? (mouse.x - cxv) / cxv : 0;
+      const ny = hasMoved ? (mouse.y - cyv) / cyv : 0;
+      const p = parallaxRef.current;
+      p.x += (nx * 14 - p.x) * 0.07;
+      p.y += (ny * 10 - p.y) * 0.07;
+      const portrait = portraitRef.current;
+      if (portrait) {
+        portrait.style.transform = isMobileNow
+          ? ""
+          : `translate3d(${p.x}px, ${p.y}px, 0) rotateY(${nx * 1.4}deg) rotateX(${-ny * 1.1}deg)`;
+      }
+
       const el = heroRef.current;
       if (el) {
-        if (isMobileRef.current) {
+        if (isMobileNow) {
           el.style.maskImage = "none";
           el.style.webkitMaskImage = "none";
         } else {
           const { x, y } = currentRef.current;
-          const size = "36rem 26rem";
-          const gradient = `radial-gradient(ellipse ${size} at ${x}px ${y}px, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 26%, rgba(0,0,0,0.95) 40%, rgba(0,0,0,0.8) 58%, rgba(0,0,0,0.55) 72%, rgba(0,0,0,0.3) 84%, rgba(0,0,0,0.12) 94%, rgba(0,0,0,0) 100%)`;
+          // compensate for the parallax so the spotlight stays under the cursor
+          const mx = x - p.x;
+          const my = y - p.y;
+          const gradient = `radial-gradient(ellipse 36rem 26rem at ${mx}px ${my}px, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 26%, rgba(0,0,0,0.95) 40%, rgba(0,0,0,0.8) 58%, rgba(0,0,0,0.55) 72%, rgba(0,0,0,0.3) 84%, rgba(0,0,0,0.12) 94%, rgba(0,0,0,0) 100%)`;
           el.style.maskImage = gradient;
           el.style.webkitMaskImage = gradient;
         }
@@ -175,17 +201,19 @@ export default function Home() {
           isHeroPointerInsideRef.current = false;
         }}
       >
-        {/* headshot with spotlight mask (mask position updated in raf, not react) */}
+        {/* headshot: spotlight mask + a subtle parallax lean toward the cursor */}
         <div className="hero-image-wrap">
-          <img
-            ref={heroRef}
-            src={isMobile ? "/mobile-headshot.png" : "https://res.cloudinary.com/dhajah4xb/image/upload/v1758094446/headShot1_buzn8d.png"}
-            className={`absolute inset-0 h-full w-full ${isMobile ? "mobile-image" : "object-contain"} hero-image`}
-            alt="headshot"
-            style={heroImageStyle}
-            loading="eager"
-            fetchPriority="high"
-          />
+          <div className="hero-portrait" ref={portraitRef}>
+            <img
+              ref={heroRef}
+              src={isMobile ? "/mobile-headshot.png" : HEADSHOT_SRC}
+              className={`absolute inset-0 h-full w-full ${isMobile ? "mobile-image" : "object-contain"} hero-image`}
+              alt="headshot"
+              style={heroImageStyle}
+              loading="eager"
+              fetchPriority="high"
+            />
+          </div>
         </div>
 
         {/* quote: top-right (same scroll fade as hero content) */}
