@@ -22,6 +22,7 @@ export default function VideoReel() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [closing, setClosing] = useState(false);
+  const [minimized, setMinimized] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [contentVisible, setContentVisible] = useState(false);
   const [projectSectionVisible, setProjectSectionVisible] = useState(false);
@@ -35,6 +36,20 @@ export default function VideoReel() {
       .then((r) => r.json())
       .then((data) => { if (data?.url) setVideoUrl(data.url); })
       .catch(() => {});
+  }, []);
+
+  // remember the user's minimize preference across pages/refreshes
+  useEffect(() => {
+    try {
+      if (localStorage.getItem("reelMinimized") === "1") setMinimized(true);
+    } catch {}
+  }, []);
+
+  const setMinimizedPersisted = useCallback((value: boolean) => {
+    setMinimized(value);
+    try {
+      localStorage.setItem("reelMinimized", value ? "1" : "0");
+    } catch {}
   }, []);
 
   useEffect(() => {
@@ -131,40 +146,73 @@ export default function VideoReel() {
 
   return (
     <>
-      <button
-        className={`reel-button ${projectSectionVisible ? "reel-button-visible" : ""}`}
-        onClick={handleOpen}
-        aria-label="watch reels"
+      <div
+        className={`reel-dock ${projectSectionVisible ? "visible" : ""} ${minimized ? "minimized" : ""}`}
       >
-        <div className="reel-button-video">
-          {videoReady ? (
-            <video
-              ref={buttonVideoRef}
-              src={videoUrl}
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="auto"
-              onLoadedData={(e) => e.currentTarget.play().catch(() => {})}
-            />
-          ) : (
-            <div className="reel-button-video-placeholder" aria-hidden />
-          )}
-        </div>
-        <div className="reel-button-overlay">
-          <div className="reel-button-arrows">
-            <svg width="24" height="24" viewBox="0 0 12 12" fill="none" className="reel-arrow reel-arrow-tr">
-              <path d="M3 9L9 3" stroke="#E1D9D7" strokeWidth="1.5" strokeLinecap="round" />
-              <path d="M4 3H9V8" stroke="#E1D9D7" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <svg width="24" height="24" viewBox="0 0 12 12" fill="none" className="reel-arrow reel-arrow-bl">
-              <path d="M9 3L3 9" stroke="#E1D9D7" strokeWidth="1.5" strokeLinecap="round" />
-              <path d="M8 9H3V4" stroke="#E1D9D7" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+        <button
+          className="reel-button"
+          onClick={handleOpen}
+          aria-label="watch reels"
+        >
+          <div className="reel-button-video">
+            {videoReady ? (
+              <video
+                ref={buttonVideoRef}
+                src={videoUrl}
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="auto"
+                onLoadedData={(e) => e.currentTarget.play().catch(() => {})}
+              />
+            ) : (
+              <div className="reel-button-video-placeholder" aria-hidden />
+            )}
           </div>
-        </div>
-      </button>
+          <div className="reel-button-overlay">
+            <div className="reel-button-arrows">
+              <svg width="24" height="24" viewBox="0 0 12 12" fill="none" className="reel-arrow reel-arrow-tr">
+                <path d="M3 9L9 3" stroke="#E1D9D7" strokeWidth="1.5" strokeLinecap="round" />
+                <path d="M4 3H9V8" stroke="#E1D9D7" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <svg width="24" height="24" viewBox="0 0 12 12" fill="none" className="reel-arrow reel-arrow-bl">
+                <path d="M9 3L3 9" stroke="#E1D9D7" strokeWidth="1.5" strokeLinecap="round" />
+                <path d="M8 9H3V4" stroke="#E1D9D7" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+          </div>
+          {/* play glyph — only shown in the minimized bubble so it still reads
+              as a watchable video */}
+          <span className="reel-button-play" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8 5.14v13.72a.5.5 0 0 0 .76.43l11.04-6.86a.5.5 0 0 0 0-.86L8.76 4.71A.5.5 0 0 0 8 5.14Z" />
+            </svg>
+          </span>
+        </button>
+
+        {minimized ? (
+          <button
+            className="reel-dock-action reel-dock-expand"
+            onClick={() => setMinimizedPersisted(false)}
+            aria-label="expand reel preview"
+          >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <path d="M6 2H2v4M10 2h4v4M6 14H2v-4M10 14h4v-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        ) : (
+          <button
+            className="reel-dock-action reel-dock-minimize"
+            onClick={() => setMinimizedPersisted(true)}
+            aria-label="minimize reel"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M4 8h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </button>
+        )}
+      </div>
 
       {open && (
         <div className="reel-modal-overlay">

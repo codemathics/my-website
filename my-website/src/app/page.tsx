@@ -13,6 +13,11 @@ const projects = getShowcaseProjects();
 const HEADSHOT_SRC =
   "https://res.cloudinary.com/dhajah4xb/image/upload/v1758094446/headShot1_buzn8d.png";
 
+// layout effect on the client (avoids the SSR useLayoutEffect warning) so we can
+// restore the scroll position before paint — no hero flash on back-navigation.
+const useIsoLayoutEffect =
+  typeof window !== "undefined" ? React.useLayoutEffect : React.useEffect;
+
 export default function Home() {
   const containerRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLImageElement>(null);
@@ -52,6 +57,26 @@ export default function Home() {
 
   // scroll-based hero fade
   const [heroScrollProgress, setHeroScrollProgress] = React.useState(0);
+
+  // restore the scroll position saved when a project was opened, so a "Cancel" /
+  // back from a case study returns the viewer to exactly where they were. only
+  // happens when a position was saved (Cancel keeps it, "Back to home" clears it).
+  useIsoLayoutEffect(() => {
+    const pc = containerRef.current;
+    if (!pc) return;
+    let saved: string | null = null;
+    try {
+      saved = sessionStorage.getItem("homeScroll");
+      if (saved !== null) sessionStorage.removeItem("homeScroll");
+    } catch {}
+    if (saved === null) return;
+    const y = parseInt(saved, 10);
+    if (!Number.isNaN(y) && y > 0) {
+      pc.scrollTop = y;
+      const progress = Math.min(1, y / (window.innerHeight * 0.6));
+      setHeroScrollProgress(progress);
+    }
+  }, []);
 
   // mobile detection
   React.useEffect(() => {

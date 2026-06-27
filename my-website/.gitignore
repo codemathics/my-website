@@ -54,3 +54,6 @@ next-env.d.ts
 # local-only tooling + logs
 .claude/
 dev-explorations*.log
+
+# agent skill tooling (local only)
+.agents

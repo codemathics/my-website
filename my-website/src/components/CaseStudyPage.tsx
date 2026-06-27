@@ -150,7 +150,17 @@ export default function CaseStudyPage({ project }: CaseStudyPageProps) {
               >
                 Cancel
               </button>
-              <Link href="/" className="cs-wip-link">
+              <Link
+                href="/"
+                className="cs-wip-link"
+                onClick={() => {
+                  // "Back to home" goes to the hero, so drop any saved showcase
+                  // position that "Cancel"/back would otherwise restore.
+                  try {
+                    sessionStorage.removeItem("homeScroll");
+                  } catch {}
+                }}
+              >
                 Back to home
               </Link>
             </div>

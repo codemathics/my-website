@@ -75,6 +75,9 @@ export interface ShowcaseProject {
   primaryLottie?: object;
   link?: string;
   highlights?: string[];
+  /* drives the icon(s) shown in the nav preview. only "design" and "video"
+     are used; a project can have one or both. defaults to ["design"]. */
+  disciplines?: ("design" | "video")[];
 }
 
 export interface ResearchInsight {
@@ -144,9 +147,24 @@ export const projects: ShowcaseProject[] = [
     ],
   },
   {
+    name: "DATABRICKS",
+    slug: "databricks",
+    disciplines: ["video"],
+    primaryImage: { src: "/bgDatabricks.png", alt: "Databricks" },
+    description:
+      "databricks is the data and ai company, helping organizations unify analytics, data\nengineering, and ai on a single lakehouse platform.",
+    link: "https://databricks.com",
+    highlights: [
+      "creative director",
+      "production + project management",
+      "video production + storytelling",
+    ],
+  },
+  {
     name: "BLOCKRADAR",
     slug: "blockradar",
-    primaryImage: { src: "/bgbr.png", alt: "Blockradar" },
+    disciplines: ["design", "video"],
+    primaryImage: { src: "/bgBlockradar.png", alt: "Blockradar" },
     description:
       "blockradar is a stablecoin wallet infrastructure for fintechs, enabling secure custody,\nsettlement, and visibility across multi-chain payment flows.",
     link: "https://blockradar.co",
@@ -171,6 +189,7 @@ export const projects: ShowcaseProject[] = [
   {
     name: "PAYCREST",
     slug: "paycrest",
+    disciplines: ["design", "video"],
     primaryImage: { src: "/bgPaycrest.png", alt: "Paycrest" },
     description:
       "paycrest is a decentralized stablecoin-to-fiat settlement protocol, powering seamless cross-border payment rails for fintechs and businesses.",
@@ -183,6 +202,7 @@ export const projects: ShowcaseProject[] = [
   {
     name: "NOBLOCKS",
     slug: "noblocks",
+    disciplines: ["design", "video"],
     primaryImage: { src: "/bgNoblocks.png", alt: "Noblocks" },
     description:
       "noblocks is a seamless financial interface that allows you to transact your stablecoins for cash, instantly!",
@@ -195,12 +215,13 @@ export const projects: ShowcaseProject[] = [
   {
     name: "GIGA AI",
     slug: "giga-ai",
+    disciplines: ["video"],
     primaryImage: { src: "/bgGiga.png", alt: "Giga AI" },
     description:
       "an AI company, backed by Y Combinator, that provides advanced, on-premise AI agents designed to replace traditional customer support call centers for large enterprises.",
     highlights: [
       "video production + storytelling",
-      "creative direction",
+      "creative director",
     ],
   },
   {
@@ -254,6 +275,7 @@ export const projects: ShowcaseProject[] = [
   {
     name: "BLOCASSET",
     slug: "blocasset",
+    disciplines: ["design", "video"],
     primaryImage: { src: "/bgBlocasset.png", alt: "Blocasset" },
     description:
       "blocasset is the one-stop web3 design asset marketplace, enabling designers to create, sell, and earn cryptocurrency for their digital assets.",
@@ -343,6 +365,85 @@ export const caseStudies: CaseStudyData[] = [
           title: "Placeholder learning",
           description:
             "Detailed write-ups across product, internal tooling, and creative direction at CodeRabbit will be added incrementally.",
+        },
+      ],
+    },
+  },
+  {
+    slug: "databricks",
+    name: "Databricks",
+    heroImage: PLACEHOLDERS.hero[1],
+    headline: "Directing and producing creative for the data and ai company",
+    role: "Creative Director, Producer & Production Project Manager",
+    timeline: "2026",
+    team: ["Clement Hugbo", "Databricks Team"],
+    skills: [
+      "Creative Direction",
+      "Production",
+      "Project Management",
+      "Video Production",
+      "Motion Design",
+    ],
+    overview:
+      "At Databricks, I worked as creative director, producer, and production project manager - leading the creative vision and overseeing production end to end. My role spanned directing the creative, producing the work, and managing the production process across teams and timelines to deliver polished, on-brand output.",
+    problem: {
+      title: "Translating a complex data and ai platform into clear, compelling creative",
+      description:
+        "Databricks operates at the technical frontier of data and ai, which makes the creative challenge one of clarity and resonance: turning dense, technical capability into stories that land with both technical and non-technical audiences without losing accuracy or polish.",
+      question:
+        "How do we direct and produce creative that makes a complex data and ai platform feel clear, credible, and human?",
+    },
+    research: {
+      title: "Grounding the creative in audience and brand",
+      insights: [
+        {
+          image: PLACEHOLDERS.insight[0],
+          caption:
+            "Placeholder insight - audience, brand, and reference research that shaped the creative direction will be added here.",
+        },
+        {
+          image: PLACEHOLDERS.insight[1],
+          caption:
+            "Placeholder insight - production constraints, timelines, and team coordination notes that informed how the work was produced.",
+        },
+      ],
+    },
+    solution: {
+      title: "Directing, producing, and managing the production",
+      steps: [
+        {
+          title: "Creative direction",
+          image: PLACEHOLDERS.step[0],
+          description:
+            "Placeholder - setting the creative vision and visual direction, and guiding the work so every piece stayed on-brand and on-message.",
+        },
+        {
+          title: "Production",
+          image: PLACEHOLDERS.step[1],
+          description:
+            "Placeholder - producing the work end to end, from pre-production through delivery, across video and motion.",
+        },
+        {
+          title: "Production project management",
+          image: PLACEHOLDERS.step[2],
+          description:
+            "Placeholder - managing the production process across teams, timelines, and stakeholders to keep everything aligned and shipping on schedule.",
+        },
+      ],
+    },
+    learnings: {
+      title: "Key Takeaways",
+      images: [PLACEHOLDERS.learning[0], PLACEHOLDERS.learning[1]],
+      items: [
+        {
+          title: "Placeholder learning",
+          description:
+            "This case study is a work in progress - full learnings, takeaways, and impact will be documented here as the work evolves.",
+        },
+        {
+          title: "Placeholder learning",
+          description:
+            "Detailed write-ups across creative direction, production, and project management at Databricks will be added incrementally.",
         },
       ],
     },
