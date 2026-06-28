@@ -21,8 +21,8 @@ export default function AboutPage() {
             <Image
               src="/about-portrait-3.png"
               alt="clement"
-              width={1024}
-              height={1024}
+              width={2000}
+              height={2000}
               unoptimized
               className="about-photo"
               sizes="(max-width: 768px) 100vw, 720px"
