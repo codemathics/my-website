@@ -19,12 +19,13 @@ export default function AboutPage() {
         <section className="about-intro">
           <div className="about-photo-wrap">
             <Image
-              src="/about-me.png"
+              src="/about-portrait-3.png"
               alt="clement"
-              width={400}
-              height={400}
+              width={1024}
+              height={1024}
+              unoptimized
               className="about-photo"
-              sizes="(max-width: 768px) 100vw, 360px"
+              sizes="(max-width: 768px) 100vw, 720px"
             />
           </div>
           <div className="about-intro-text">
