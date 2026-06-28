@@ -453,7 +453,7 @@ export const caseStudies: CaseStudyData[] = [
     name: "Blockradar",
     logoIcon: "/logos/blockradar.svg",
     heroLottieKey: "br",
-    overviewImage: "/bgbr.png",
+    overviewImage: "/bgbr-2.png",
     headline: "Designing stablecoin wallet infrastructure from 0 to $450M+ TPV",
     role: "Founding Head of Product & Design",
     timeline: "2024 - Present",
