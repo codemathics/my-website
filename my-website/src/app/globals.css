@@ -625,7 +625,10 @@ body::-webkit-scrollbar { display: none; }
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 0 3px 1px;
+  /* the card padding is tight (2px) so the full-bleed thumb hugs the edge;
+     inset the name + icon row so it reads ~8px from the card edge and stays
+     visually balanced on both sides. */
+  padding: 0 6px 4px;
 }
 
 .showcase-nav-preview-name {
