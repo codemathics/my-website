@@ -4,6 +4,7 @@ import { flushSync } from "react-dom";
 import Lottie from "lottie-react";
 import Link from "next/link";
 import { ShowcaseProject } from "@/data/projects";
+import { sound } from "@/lib/sound/engine";
 
 interface ProjectShowcaseProps {
   projects: ShowcaseProject[];
@@ -203,6 +204,9 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
   const openNavPreview = useCallback((i: number) => {
     hoveredNavRef.current = i;
     setHoveredNav(i);
+    /* a detent per tick, pitched by position, so sweeping the column plays a
+       soft rising run — the picker-wheel feel, matched to the card that opens. */
+    sound.navDetent(i);
   }, []);
 
   const handleNavEnter = useCallback(
@@ -320,6 +324,9 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
 
     exitTimerRef.current = setTimeout(() => {
       displayIndexRef.current = nextIdx;
+      /* voiced on arrival, not on departure, so the sound lands with the new
+         project rather than ahead of it. */
+      sound.swap(step > 0 ? "up" : "down");
 
       flushSync(() => {
         setDisplayIndex(nextIdx);
@@ -376,6 +383,7 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
       if (!pc) return;
       if (i === displayIndexRef.current && i === targetIndexRef.current) return;
 
+      sound.select();
       jumpingRef.current = true;
       clearTimeout(exitTimerRef.current);
       clearTimeout(cooldownTimerRef.current);

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import SoundToggle from "@/components/SoundToggle";
 import "./NavLink.css";
 
 interface NavItem {
@@ -174,6 +175,8 @@ export default function Navbar({ showLogo = true, showNav = true }: NavbarProps)
               {index < navItems.length - 1 && <NavDivider />}
             </React.Fragment>
           ))}
+          <NavDivider />
+          <SoundToggle />
         </div>
 
         {/* nav menu icon — visible only on tablet/mobile; figma: rounded box with animated center line */}
@@ -236,6 +239,7 @@ export default function Navbar({ showLogo = true, showNav = true }: NavbarProps)
               onClick={closeMenu}
             />
           ))}
+          <SoundToggle variant="row" />
         </div>
       </div>
     </>
