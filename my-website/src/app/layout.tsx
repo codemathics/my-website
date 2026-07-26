@@ -4,6 +4,7 @@ import VideoReel from "@/components/VideoReel";
 import ClarityScript from "@/components/ClarityScript";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import SoundEffects from "@/components/SoundEffects";
+import AgentationToolbar from "@/components/AgentationToolbar";
 import "./globals.css";
 
 const siteUrl =
@@ -63,6 +64,7 @@ export default function RootLayout({
         <ChatAgent />
         <ClarityScript />
         <GoogleAnalytics />
+        <AgentationToolbar />
       </body>
     </html>
   );
