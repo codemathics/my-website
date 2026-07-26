@@ -1,14 +1,29 @@
 /* ─── ui sound engine ────────────────────────────────────
-   every sound is synthesised at runtime from a short noise burst (+ an optional
-   sine "body") rather than loaded from a file: nothing to download, and each
-   play can be detuned/re-shaped so a rapid run of ticks never sounds like the
-   same sample looping. the palette is deliberately tiny and quiet — the target
-   is the mechanical detent of an apple trackpad/digital-crown scroll, something
-   you feel more than hear. */
+   every sound is synthesised at runtime rather than loaded from a file: nothing
+   to download, and each play can be detuned and re-shaped so a rapid run of
+   ticks never sounds like the same sample looping.
+
+   two ingredients, and which one leads decides the character:
+
+   • a filtered noise burst — mechanical. this is the trackpad detent, the thing
+     you feel more than hear.
+   • a soft sine tone — musical. this carries the transitions, where a percussive
+     hit would read as a drum beat rather than as one thing becoming another.
+
+   both stay far below unity. nothing here should ever announce itself. */
 
 export type ScrollSource = "trackpad" | "mouse";
 
-type Listener = (enabled: boolean) => void;
+export interface SoundState {
+  /* the viewer's preference. */
+  enabled: boolean;
+  /* whether sound can actually be heard right now — enabled *and* past the
+     browser's gesture requirement. the toggle advertises itself until this is
+     true, because until then the site is silent whatever the preference says. */
+  active: boolean;
+}
+
+type Listener = (state: SoundState) => void;
 
 const STORAGE_KEY = "soundEnabled";
 
@@ -23,26 +38,39 @@ const MASTER_LEVEL = 0.07;
    than they decay, and stacked noise bursts turn into a hiss instead of a tick. */
 const MAX_VOICES = 12;
 
-const NOISE_SECONDS = 0.35;
+/* long enough that even the slowest cue can start from a random offset and
+   still have unused buffer left to run through. */
+const NOISE_SECONDS = 1;
 
 interface BurstSpec {
-  /* bandpass centre — the "material" of the tick. higher reads as glass/plastic,
-     lower as wood. */
-  frequency: number;
-  q: number;
+  /* ── noise layer (omit `gain` for a tone-only cue) ── */
+  /* bandpass centre — the "material" of the tick. higher reads as glass or
+     plastic, lower as wood. */
+  frequency?: number;
+  q?: number;
   /* peak gain before the per-play intensity scaling. */
-  gain: number;
-  decay: number;
-  /* time to reach that peak. a near-instant attack reads as a sharp click; a
-     few milliseconds of ramp turns the same burst into a soft pat, which drops
-     perceived loudness far more than trimming the gain does. */
-  attack?: number;
-  /* optional sine thump underneath the noise; gives weight to selections. */
+  gain?: number;
+  /* multiplies the noise buffer playback rate — cheap way to shift the grain. */
+  rate?: number;
+
+  /* ── tone layer ── */
   body?: number;
   bodyGain?: number;
   bodyDecay?: number;
-  /* multiplies the noise buffer playback rate — cheap way to shift the grain. */
-  rate?: number;
+  /* ratio the tone glides to across its life. a fall is what turns a tone into
+     a drum hit, so this defaults to 1 — no glide, no beat. */
+  bodyGlide?: number;
+  /* an optional partial above the fundamental, as a ratio. a little of this
+     keeps a soft sine from sounding like a test tone. */
+  partial?: number;
+  partialGain?: number;
+
+  /* ── shared envelope ── */
+  decay: number;
+  /* time to reach peak. a near-instant attack reads as a sharp click; a few
+     milliseconds turns the same burst into a soft pat, and tens of milliseconds
+     turn it into a swell with no transient at all. */
+  attack?: number;
   pan?: number;
 }
 
@@ -66,11 +94,23 @@ class SoundEngine {
     return this.enabled;
   }
 
+  getState(): SoundState {
+    return {
+      enabled: this.enabled,
+      active: this.enabled && this.ctx?.state === "running",
+    };
+  }
+
   subscribe(listener: Listener) {
     this.listeners.add(listener);
     return () => {
       this.listeners.delete(listener);
     };
+  }
+
+  private emit() {
+    const state = this.getState();
+    this.listeners.forEach((l) => l(state));
   }
 
   /* read the stored preference once, on the client. kept out of the constructor
@@ -105,17 +145,30 @@ class SoundEngine {
     if (next === this.enabled) return;
     this.enabled = next;
     if (!next) this.suspend();
-    this.listeners.forEach((l) => l(next));
+    this.emit();
   }
 
   toggle() {
     const next = !this.enabled;
     this.setEnabled(next, true);
-    if (next) {
-      this.unlock();
-      this.confirm();
-    }
+    if (next) void this.start();
     return next;
+  }
+
+  /* let sound begin: called from a click, which is the gesture the browser has
+     been waiting for. distinct from `toggle` because a viewer who has never
+     touched the page still has the preference switched on — their click means
+     "start", not "mute".
+
+     the confirmation waits on resume: a context takes a moment to spin up, and
+     anything scheduled before it is running is simply dropped. */
+  async start() {
+    this.setEnabled(true, true);
+    this.unlock();
+    try {
+      await this.ctx?.resume();
+    } catch {}
+    this.confirm();
   }
 
   /* ── audio graph ─────────────────────────────────────── */
@@ -152,6 +205,10 @@ class SoundEngine {
 
       master.connect(limiter).connect(this.ctx.destination);
       this.master = master;
+      /* the context can take a moment to actually start, and can be pulled out
+         from under us by the os, so the audible state is reported from the
+         context itself rather than assumed. */
+      this.ctx.addEventListener("statechange", () => this.emit());
     }
 
     this.resume();
@@ -199,6 +256,7 @@ class SoundEngine {
 
     const t = ctx.currentTime;
     const decay = spec.decay;
+    const attack = spec.attack ?? 0.0012;
 
     let output: AudioNode = master;
     if (spec.pan !== undefined && ctx.createStereoPanner) {
@@ -208,65 +266,94 @@ class SoundEngine {
       output = panner;
     }
 
-    const source = ctx.createBufferSource();
-    source.buffer = this.noiseBuffer(ctx);
-    source.playbackRate.value = spec.rate ?? 1;
-    /* start from a random point in the buffer so consecutive ticks never share
-       the same grain of noise. */
-    const offset = Math.random() * (NOISE_SECONDS - decay - 0.02);
-
-    const band = ctx.createBiquadFilter();
-    band.type = "bandpass";
-    band.frequency.value = spec.frequency;
-    band.Q.value = spec.q;
-
-    const attack = spec.attack ?? 0.0012;
-    const envelope = ctx.createGain();
-    envelope.gain.setValueAtTime(0.0001, t);
-    envelope.gain.exponentialRampToValueAtTime(
-      Math.max(0.0002, spec.gain * level),
-      t + attack
-    );
-    envelope.gain.exponentialRampToValueAtTime(0.0001, t + decay);
-
-    source.connect(band).connect(envelope).connect(output);
-
+    /* one play is one voice however many nodes it takes, released when the last
+       of them finishes. */
     this.voices += 1;
-    source.onended = () => {
+    let pending = 0;
+    const release = () => {
+      pending -= 1;
+      if (pending > 0) return;
       this.voices -= 1;
-      source.disconnect();
-      band.disconnect();
-      envelope.disconnect();
       if (output !== master) output.disconnect();
     };
-    source.start(t, Math.max(0, offset));
-    source.stop(t + decay + 0.01);
 
-    if (!spec.body) return;
-
-    const bodyDecay = spec.bodyDecay ?? decay;
-    const osc = ctx.createOscillator();
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(spec.body, t);
-    /* a small downward glide is what makes a click read as a physical knock
-       rather than a beep. */
-    osc.frequency.exponentialRampToValueAtTime(spec.body * 0.72, t + bodyDecay);
-
-    const bodyGain = ctx.createGain();
-    bodyGain.gain.setValueAtTime(0.0001, t);
-    bodyGain.gain.exponentialRampToValueAtTime(
-      Math.max(0.0002, (spec.bodyGain ?? spec.gain * 0.5) * level),
-      t + 0.004
-    );
-    bodyGain.gain.exponentialRampToValueAtTime(0.0001, t + bodyDecay);
-
-    osc.connect(bodyGain).connect(output);
-    osc.onended = () => {
-      osc.disconnect();
-      bodyGain.disconnect();
+    /* shapes the swell shared by both layers. exponential ramps can't touch
+       zero, hence the near-silent floor at each end. */
+    const shape = (param: AudioParam, peak: number, until: number) => {
+      param.setValueAtTime(0.0001, t);
+      param.exponentialRampToValueAtTime(Math.max(0.0002, peak), t + attack);
+      param.exponentialRampToValueAtTime(0.0001, t + until);
     };
-    osc.start(t);
-    osc.stop(t + bodyDecay + 0.01);
+
+    if (spec.gain) {
+      const source = ctx.createBufferSource();
+      source.buffer = this.noiseBuffer(ctx);
+      source.playbackRate.value = spec.rate ?? 1;
+
+      const band = ctx.createBiquadFilter();
+      band.type = "bandpass";
+      band.frequency.value = spec.frequency ?? 1500;
+      band.Q.value = spec.q ?? 1;
+
+      const envelope = ctx.createGain();
+      shape(envelope.gain, spec.gain * level, decay);
+      source.connect(band).connect(envelope).connect(output);
+
+      pending += 1;
+      source.onended = () => {
+        source.disconnect();
+        band.disconnect();
+        envelope.disconnect();
+        release();
+      };
+      /* start from a random point in the buffer so consecutive ticks never
+         share the same grain of noise. */
+      source.start(t, Math.random() * (NOISE_SECONDS - decay - 0.02));
+      source.stop(t + decay + 0.01);
+    }
+
+    if (spec.body) {
+      const bodyDecay = spec.bodyDecay ?? decay;
+      const glide = spec.bodyGlide ?? 1;
+      const partials: Array<[number, number]> = [
+        [spec.body, spec.bodyGain ?? (spec.gain ?? 0.1) * 0.5],
+      ];
+      if (spec.partial) {
+        partials.push([
+          spec.body * spec.partial,
+          spec.partialGain ?? (spec.bodyGain ?? 0.1) * 0.14,
+        ]);
+      }
+
+      for (const [frequency, peak] of partials) {
+        const osc = ctx.createOscillator();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(frequency, t);
+        /* a downward glide is exactly how a kick drum is synthesised, so it is
+           opt-in: only the cues that want to read as a physical knock use it. */
+        if (glide !== 1) {
+          osc.frequency.exponentialRampToValueAtTime(
+            frequency * glide,
+            t + bodyDecay
+          );
+        }
+
+        const gain = ctx.createGain();
+        shape(gain.gain, peak * level, bodyDecay);
+
+        osc.connect(gain).connect(output);
+        pending += 1;
+        osc.onended = () => {
+          osc.disconnect();
+          gain.disconnect();
+          release();
+        };
+        osc.start(t);
+        osc.stop(t + bodyDecay + 0.01);
+      }
+    }
+
+    if (pending === 0) this.voices -= 1;
   }
 
   /* ── palette ─────────────────────────────────────────── */
@@ -290,6 +377,7 @@ class SoundEngine {
           body: 220 * wobble,
           bodyGain: 0.04,
           bodyDecay: 0.028,
+          bodyGlide: 0.72,
           rate: 1.1,
           pan,
         },
@@ -342,22 +430,32 @@ class SoundEngine {
       body: 330,
       bodyGain: 0.018,
       bodyDecay: 0.11,
+      bodyGlide: 0.72,
       rate: 1,
     });
   }
 
-  /* the panel crossfading to another project — a wider, airier version of the
-     scroll tick so a section change feels heavier than a notch. */
+  /* the panel crossfading to another project.
+
+     no noise layer and no pitch fall: a low sine sliding downward is how you
+     synthesise a kick, and a transition that thumps reads as a beat rather than
+     as one thing becoming another. this is a bare tone that blooms over ~100ms
+     — there is no onset to hear, it is simply there — and then dissolves across
+     the rest of the crossfade, so the cue lasts about as long as the image takes
+     to arrive rather than marking the instant it does. the two directions are a
+     fifth apart, so moving down the projects and back up sound related rather
+     than identical. */
   swap(direction: "up" | "down" = "up") {
     this.play({
-      frequency: direction === "up" ? 1250 : 980,
-      q: 0.9,
-      gain: 0.14,
-      decay: 0.14,
-      body: direction === "up" ? 250 : 190,
-      bodyGain: 0.022,
-      bodyDecay: 0.16,
-      rate: 0.55,
+      body: direction === "up" ? 784 : 523,
+      bodyGain: 0.1,
+      bodyDecay: 0.44,
+      /* a whisper of the octave above keeps the sine from sounding like a
+         test tone without adding any edge. */
+      partial: 2,
+      partialGain: 0.012,
+      attack: 0.1,
+      decay: 0.44,
     });
   }
 
@@ -372,23 +470,27 @@ class SoundEngine {
       body: 420,
       bodyGain: 0.02,
       bodyDecay: 0.07,
+      bodyGlide: 0.82,
       rate: 1.05,
     });
   }
 
-  /* played once when sound is switched on, so the toggle demonstrates itself. */
+  /* played once when sound is switched on, so the control demonstrates itself:
+     two soft tones a fifth apart, rising. same voice as the panel transition, so
+     the first thing you hear is the palette introducing itself. */
   private confirm() {
-    this.play({
-      frequency: 1900,
-      q: 2.6,
-      gain: 0.18,
-      decay: 0.04,
-      attack: 0.003,
-      body: 660,
-      bodyGain: 0.028,
-      bodyDecay: 0.13,
-      rate: 1.2,
-    });
+    const note = (body: number) =>
+      this.play({
+        body,
+        bodyGain: 0.085,
+        bodyDecay: 0.24,
+        partial: 2,
+        partialGain: 0.01,
+        attack: 0.035,
+        decay: 0.24,
+      });
+    note(523);
+    window.setTimeout(() => note(784), 120);
   }
 }
 
