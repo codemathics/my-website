@@ -488,7 +488,7 @@ body::-webkit-scrollbar { display: none; }
 
 /* ── left-side jump navigator (notion-style minimap) ── */
 
-.showcase-nav {
+.showcase-nav-column {
   position: absolute;
   /* roughly aligned with the top logo + project title column, nudged a touch
      right so the ticks sit just inside that edge. */
@@ -496,17 +496,48 @@ body::-webkit-scrollbar { display: none; }
   top: 50%;
   transform: translateY(-50%);
   z-index: 6;
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-  padding: 6px 0;
   /* fades in with the panel */
   opacity: 0;
   transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.35s;
 }
 
-.project-showcase-sticky.panel-revealed .showcase-nav {
+.project-showcase-sticky.panel-revealed .showcase-nav-column {
   opacity: 1;
+}
+
+/* heads the rail without displacing it: floating the control above the column
+   keeps the ticks themselves centred on the viewport, and leaves it in place on
+   short viewports where the ticks are hidden. */
+/* scoped to the column so these beat the navbar's base .sound-toggle rules,
+   which come later in the file. */
+.showcase-nav-column .showcase-nav-sound {
+  position: absolute;
+  bottom: 100%;
+  /* cancels the svg's own leading gutter so the bars start on the same edge as
+     the ticks below them. */
+  left: -2px;
+  margin-bottom: 12px;
+  height: 20px;
+  padding: 0;
+  /* at rest it reads as one more tick in the rail; lit when sound is on. */
+  color: rgba(201, 201, 201, 0.28);
+}
+
+.showcase-nav-column .showcase-nav-sound.is-on {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .showcase-nav-column .showcase-nav-sound:hover {
+    color: rgba(255, 255, 255, 0.9);
+  }
+}
+
+.showcase-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 6px 0;
 }
 
 .showcase-nav-item {
@@ -1342,7 +1373,7 @@ body::-webkit-scrollbar { display: none; }
 
   /* keep the nav ticks ~16px inside the column, mirroring desktop (logo 40 /
      nav 56) at this scale (logo 24 / nav 40). */
-  .showcase-nav {
+  .showcase-nav-column {
     left: 40px;
   }
 

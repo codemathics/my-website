@@ -207,7 +207,7 @@ export default function Home() {
 
   return (
     <div ref={containerRef} className="page-container">
-      <Navbar showLogo={showLogo} showNav={showTopButton} />
+      <Navbar showLogo={showLogo} showNav={showTopButton} showSound={false} />
 
       {/* hero */}
       <div

@@ -11,10 +11,15 @@ const BAR_SCALES = [0.45, 0.9, 0.62, 1];
 interface SoundToggleProps {
   /* "row" is the full-width, labelled variant used inside the mobile menu. */
   variant?: "icon" | "row";
+  className?: string;
   onToggle?: () => void;
 }
 
-export default function SoundToggle({ variant = "icon", onToggle }: SoundToggleProps) {
+export default function SoundToggle({
+  variant = "icon",
+  className = "",
+  onToggle,
+}: SoundToggleProps) {
   const enabled = useSoundEnabled();
 
   const handleClick = () => {
@@ -53,7 +58,7 @@ export default function SoundToggle({ variant = "icon", onToggle }: SoundToggleP
     return (
       <button
         type="button"
-        className={`nav-link sound-toggle sound-toggle-row ${enabled ? "is-on" : ""}`}
+        className={`nav-link sound-toggle sound-toggle-row ${enabled ? "is-on" : ""} ${className}`}
         onClick={handleClick}
         aria-pressed={enabled}
         aria-label={label}
@@ -67,7 +72,7 @@ export default function SoundToggle({ variant = "icon", onToggle }: SoundToggleP
   return (
     <button
       type="button"
-      className={`sound-toggle ${enabled ? "is-on" : ""}`}
+      className={`sound-toggle ${enabled ? "is-on" : ""} ${className}`}
       onClick={handleClick}
       aria-pressed={enabled}
       aria-label={label}
