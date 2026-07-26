@@ -4,6 +4,7 @@ import VideoReel from "@/components/VideoReel";
 import ClarityScript from "@/components/ClarityScript";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import SoundEffects from "@/components/SoundEffects";
+import SoundDock from "@/components/SoundDock";
 import AgentationToolbar from "@/components/AgentationToolbar";
 import "./globals.css";
 
@@ -62,6 +63,7 @@ export default function RootLayout({
         <SoundEffects />
         <VideoReel />
         <ChatAgent />
+        <SoundDock />
         <ClarityScript />
         <GoogleAnalytics />
         <AgentationToolbar />

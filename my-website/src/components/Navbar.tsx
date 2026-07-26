@@ -65,19 +65,11 @@ const NavLink = ({
 interface NavbarProps {
   showLogo?: boolean;
   showNav?: boolean;
-  /* the home page hosts the sound control at the head of the project rail
-     instead, so it opts the inline one out to avoid two of them. the mobile
-     menu always keeps its row — the rail is desktop-only. */
-  showSound?: boolean;
 }
 
 const SCROLL_THRESHOLD = 60;
 
-export default function Navbar({
-  showLogo = true,
-  showNav = true,
-  showSound = true,
-}: NavbarProps) {
+export default function Navbar({ showLogo = true, showNav = true }: NavbarProps) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -183,12 +175,6 @@ export default function Navbar({
               {index < navItems.length - 1 && <NavDivider />}
             </React.Fragment>
           ))}
-          {showSound && (
-            <>
-              <NavDivider />
-              <SoundToggle />
-            </>
-          )}
         </div>
 
         {/* nav menu icon — visible only on tablet/mobile; figma: rounded box with animated center line */}
@@ -251,6 +237,8 @@ export default function Navbar({
               onClick={closeMenu}
             />
           ))}
+          {/* phone-sized fallback: the floating dock is hidden at this width to
+              keep the bottom-right corner clear. */}
           <SoundToggle variant="row" />
         </div>
       </div>
