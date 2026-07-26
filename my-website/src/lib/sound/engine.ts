@@ -12,9 +12,12 @@ type Listener = (enabled: boolean) => void;
 
 const STORAGE_KEY = "soundEnabled";
 
-/* everything is mixed well below unity — these ticks should sit under whatever
-   else the viewer is listening to, never on top of it. */
-const MASTER_LEVEL = 0.34;
+/* the single dial for how present the whole palette is — raise this if the ticks
+   ever need to come forward. everything sits far below unity: measured at the
+   master bus a scroll detent peaks near −43 dBFS and even a click only reaches
+   about −34 dBFS. at that level the sounds read as texture under the room
+   rather than as an interface talking back. */
+const MASTER_LEVEL = 0.07;
 
 /* a hard ceiling on simultaneous voices. a fast flick can request ticks faster
    than they decay, and stacked noise bursts turn into a hiss instead of a tick. */
@@ -30,6 +33,10 @@ interface BurstSpec {
   /* peak gain before the per-play intensity scaling. */
   gain: number;
   decay: number;
+  /* time to reach that peak. a near-instant attack reads as a sharp click; a
+     few milliseconds of ramp turns the same burst into a soft pat, which drops
+     perceived loudness far more than trimming the gain does. */
+  attack?: number;
   /* optional sine thump underneath the noise; gives weight to selections. */
   body?: number;
   bodyGain?: number;
@@ -134,10 +141,10 @@ class SoundEngine {
       const master = this.ctx.createGain();
       master.gain.value = MASTER_LEVEL;
 
-      /* a gentle limiter: with detents this short, overlapping voices clip long
-         before they get loud enough to notice individually. */
+      /* a gentle limiter. single sounds never reach the threshold; it exists to
+         stop a fast flick's overlapping tails from stacking into a hiss. */
       const limiter = this.ctx.createDynamicsCompressor();
-      limiter.threshold.value = -18;
+      limiter.threshold.value = -24;
       limiter.knee.value = 12;
       limiter.ratio.value = 12;
       limiter.attack.value = 0.002;
@@ -213,11 +220,12 @@ class SoundEngine {
     band.frequency.value = spec.frequency;
     band.Q.value = spec.q;
 
+    const attack = spec.attack ?? 0.0012;
     const envelope = ctx.createGain();
     envelope.gain.setValueAtTime(0.0001, t);
     envelope.gain.exponentialRampToValueAtTime(
       Math.max(0.0002, spec.gain * level),
-      t + 0.0012
+      t + attack
     );
     envelope.gain.exponentialRampToValueAtTime(0.0001, t + decay);
 
@@ -264,19 +272,23 @@ class SoundEngine {
   /* ── palette ─────────────────────────────────────────── */
 
   /* one notch of scroll. trackpad gestures fire these many times a second, so
-     that variant is softer, drier and pitched higher — closer to grain than to
-     a click. a mouse wheel gets one crisper detent per physical notch. */
+     that variant is drier and shorter — closer to grain than to a click. a
+     mouse wheel gets one slightly fuller detent per physical notch.
+
+     both sit below 2khz on purpose: hearing peaks around 3–4khz, so a tick
+     centred up there sounds twice as present as the meter says it is. */
   scrollTick(intensity: number, source: ScrollSource, pan = 0) {
     const wobble = 0.94 + Math.random() * 0.12;
     if (source === "mouse") {
       this.play(
         {
-          frequency: 1750 * wobble,
-          q: 1.5,
-          gain: 0.16,
+          frequency: 1320 * wobble,
+          q: 1.4,
+          gain: 0.24,
           decay: 0.035,
+          attack: 0.0025,
           body: 220 * wobble,
-          bodyGain: 0.05,
+          bodyGain: 0.04,
           bodyDecay: 0.028,
           rate: 1.1,
           pan,
@@ -287,10 +299,11 @@ class SoundEngine {
     }
     this.play(
       {
-        frequency: 2450 * wobble,
-        q: 2.4,
-        gain: 0.085,
-        decay: 0.019,
+        frequency: 1700 * wobble,
+        q: 1.8,
+        gain: 0.2,
+        decay: 0.016,
+        attack: 0.004,
         rate: 1.35,
         pan,
       },
@@ -304,12 +317,13 @@ class SoundEngine {
     const ratio = Math.pow(2, clamp(step, 0, 11) / 24);
     this.play(
       {
-        frequency: 2100 * ratio,
-        q: 3.2,
-        gain: 0.1,
+        frequency: 1680 * ratio,
+        q: 2.6,
+        gain: 0.14,
         decay: 0.026,
+        attack: 0.003,
         body: 520 * ratio,
-        bodyGain: 0.022,
+        bodyGain: 0.018,
         bodyDecay: 0.05,
         rate: 1.2,
       },
@@ -320,12 +334,13 @@ class SoundEngine {
   /* committing to something: nav click, dot click. */
   select() {
     this.play({
-      frequency: 1900,
+      frequency: 1500,
       q: 1.2,
-      gain: 0.18,
+      gain: 0.1,
       decay: 0.05,
+      attack: 0.0025,
       body: 330,
-      bodyGain: 0.075,
+      bodyGain: 0.018,
       bodyDecay: 0.11,
       rate: 1,
     });
@@ -337,10 +352,10 @@ class SoundEngine {
     this.play({
       frequency: direction === "up" ? 1250 : 980,
       q: 0.9,
-      gain: 0.09,
+      gain: 0.14,
       decay: 0.14,
       body: direction === "up" ? 250 : 190,
-      bodyGain: 0.045,
+      bodyGain: 0.022,
       bodyDecay: 0.16,
       rate: 0.55,
     });
@@ -349,12 +364,13 @@ class SoundEngine {
   /* a carousel/reel landing on a slide. */
   snap() {
     this.play({
-      frequency: 2200,
+      frequency: 1780,
       q: 2,
-      gain: 0.12,
+      gain: 0.16,
       decay: 0.045,
+      attack: 0.003,
       body: 420,
-      bodyGain: 0.03,
+      bodyGain: 0.02,
       bodyDecay: 0.07,
       rate: 1.05,
     });
@@ -363,12 +379,13 @@ class SoundEngine {
   /* played once when sound is switched on, so the toggle demonstrates itself. */
   private confirm() {
     this.play({
-      frequency: 2400,
+      frequency: 1900,
       q: 2.6,
-      gain: 0.11,
+      gain: 0.18,
       decay: 0.04,
+      attack: 0.003,
       body: 660,
-      bodyGain: 0.035,
+      bodyGain: 0.028,
       bodyDecay: 0.13,
       rate: 1.2,
     });

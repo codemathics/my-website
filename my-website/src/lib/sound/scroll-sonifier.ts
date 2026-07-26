@@ -64,8 +64,6 @@ export function startScrollSonification() {
   const positions = new WeakMap<EventTarget, { x: number; y: number }>();
 
   let source: ScrollSource = "trackpad";
-  /* hysteresis, so one odd event can't flip the whole feel mid-gesture. */
-  let sourceScore = 0;
 
   let lastWheelAt = -Infinity;
   let lastTickAt = -Infinity;
@@ -82,23 +80,32 @@ export function startScrollSonification() {
      staying silent when the page has nothing left to scroll. */
   let armedNotch = 0;
 
+  /* both devices arrive as the same wheel event, so the source is inferred from
+     the shape of the deltas. only unambiguous evidence switches the mode —
+     anything in between leaves it where it was, so a gesture never changes
+     voice halfway through. */
   const classify = (event: WheelEvent, magnitude: number, gap: number) => {
-    if (event.deltaMode !== 0) {
-      sourceScore = clamp(sourceScore - 2, -3, 3);
-    } else if (
-      !Number.isInteger(event.deltaY) ||
-      !Number.isInteger(event.deltaX) ||
-      event.deltaX !== 0 ||
-      magnitude < 24 ||
-      gap < 20
-    ) {
-      /* fractional deltas, sideways movement, tiny steps and frame-rate cadence
-         are all things a notched wheel cannot produce. */
-      sourceScore = clamp(sourceScore + 1, -3, 3);
-    } else if (magnitude >= 90) {
-      sourceScore = clamp(sourceScore - 1, -3, 3);
-    }
-    source = sourceScore >= 0 ? "trackpad" : "mouse";
+    /* fractional deltas, sideways movement, sub-notch steps and frame-rate
+       cadence are all things a notched wheel cannot produce. */
+    const trackpadEvidence =
+      event.deltaMode === 0 &&
+      (!Number.isInteger(event.deltaY) ||
+        !Number.isInteger(event.deltaX) ||
+        event.deltaX !== 0 ||
+        magnitude < 24 ||
+        (gap < 20 && magnitude < 60));
+
+    /* a notch: whole, chunky, vertical-only, and spaced further apart than a
+       finger dragging at 60–120hz. line/page deltas only come from real wheels. */
+    const mouseEvidence =
+      event.deltaMode !== 0 ||
+      (Number.isInteger(event.deltaY) &&
+        event.deltaX === 0 &&
+        magnitude >= 90 &&
+        gap >= 40);
+
+    if (trackpadEvidence) source = "trackpad";
+    else if (mouseEvidence) source = "mouse";
   };
 
   const onWheel = (event: WheelEvent) => {
@@ -137,7 +144,9 @@ export function startScrollSonification() {
     if (now - lastTickAt < minGap) return;
     lastTickAt = now;
 
-    const loudness = clamp(0.22 + Math.sqrt(speed) / 38, 0.22, 1);
+    /* velocity opens the tick up a little, but only a little: the ceiling is
+       well under full intensity so a hard flick never jumps out. */
+    const loudness = clamp(0.2 + Math.sqrt(speed) / 46, 0.2, 0.8);
     const intensity = momentum ? loudness * MOMENTUM_GAIN : loudness;
     /* a few degrees of stereo wander keeps a long run of ticks from sounding
        like it is coming from a single point behind the screen. */
