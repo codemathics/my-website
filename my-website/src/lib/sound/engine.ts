@@ -27,12 +27,11 @@ type Listener = (state: SoundState) => void;
 
 const STORAGE_KEY = "soundEnabled";
 
-/* the single dial for how present the whole palette is — raise this if the ticks
-   ever need to come forward. everything sits far below unity: measured at the
-   master bus a scroll detent peaks near −43 dBFS and even a click only reaches
-   about −34 dBFS. at that level the sounds read as texture under the room
-   rather than as an interface talking back. */
-const MASTER_LEVEL = 0.07;
+/* the single dial for how present the whole palette is. everything sits far
+   below unity: measured at the master bus a scroll detent peaks near −42 dBFS
+   and the loudest cue, a selection, around −33 dBFS. at that level the sounds
+   read as texture under the room rather than as an interface talking back. */
+const MASTER_LEVEL = 0.1;
 
 /* a hard ceiling on simultaneous voices. a fast flick can request ticks faster
    than they decay, and stacked noise bursts turn into a hiss instead of a tick. */
