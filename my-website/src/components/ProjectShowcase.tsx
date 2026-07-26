@@ -537,7 +537,11 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
             heads the same rail — it mostly speaks for this column, and it stays
             put when the ticks are hidden on short viewports. */}
         <div className="showcase-nav-column">
-          <SoundToggle className="showcase-nav-sound" />
+          <SoundToggle
+            className="showcase-nav-sound"
+            showLabel
+            revealed={panelRevealed}
+          />
           <nav className="showcase-nav" aria-label="Jump to project">
             {projects.map((p, i) => (
               <button
