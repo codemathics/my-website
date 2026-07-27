@@ -488,7 +488,7 @@ body::-webkit-scrollbar { display: none; }
 
 /* ── left-side jump navigator (notion-style minimap) ── */
 
-.showcase-nav {
+.showcase-nav-column {
   position: absolute;
   /* roughly aligned with the top logo + project title column, nudged a touch
      right so the ticks sit just inside that edge. */
@@ -496,17 +496,54 @@ body::-webkit-scrollbar { display: none; }
   top: 50%;
   transform: translateY(-50%);
   z-index: 6;
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-  padding: 6px 0;
   /* fades in with the panel */
   opacity: 0;
   transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.35s;
 }
 
-.project-showcase-sticky.panel-revealed .showcase-nav {
+.project-showcase-sticky.panel-revealed .showcase-nav-column {
   opacity: 1;
+}
+
+/* heads the rail without displacing it: floating the control above the column
+   keeps the ticks themselves centred on the viewport, and leaves it in place on
+   short viewports where the ticks are hidden. */
+/* scoped to the column so these beat the navbar's base .sound-toggle rules,
+   which come later in the file. */
+.showcase-nav-column .showcase-nav-sound {
+  position: absolute;
+  bottom: 100%;
+  /* cancels the svg's own leading gutter so the bars start on the same edge as
+     the ticks below them. */
+  left: -2px;
+  margin-bottom: 12px;
+  height: 20px;
+  padding: 0;
+  /* at rest it reads as one more tick in the rail; lit when sound is on. */
+  color: rgba(201, 201, 201, 0.3);
+}
+
+.showcase-nav-column .showcase-nav-sound.is-on {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* the label clears the ticks and lands on the same left edge as the preview
+   cards that fly out lower down the rail. */
+.showcase-nav-column .sound-toggle-label {
+  margin-left: 16px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .showcase-nav-column .showcase-nav-sound:hover {
+    color: rgba(255, 255, 255, 0.9);
+  }
+}
+
+.showcase-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 6px 0;
 }
 
 .showcase-nav-item {
@@ -889,6 +926,193 @@ body::-webkit-scrollbar { display: none; }
   font-size: 16px;
   margin: 0 2px;
   user-select: none;
+}
+
+/* ── ui sound toggle ── */
+
+.sound-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 8px;
+  background: transparent;
+  border: none;
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.35);
+  cursor: pointer;
+  transition: color 0.35s ease;
+}
+
+.sound-toggle.is-on {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.sound-toggle-svg {
+  display: block;
+  overflow: visible;
+}
+
+/* geometry stays put; only the scale animates, so the bars grow out of their
+   own centre line rather than jumping. */
+.sound-toggle-bar {
+  transform: scaleY(var(--bar-scale, 1));
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sound-toggle-bar:nth-child(2) { transition-delay: 0.03s; }
+.sound-toggle-bar:nth-child(3) { transition-delay: 0.06s; }
+.sound-toggle-bar:nth-child(4) { transition-delay: 0.09s; }
+
+/* while nothing can be heard, the bars run a slow grey ripple. a static icon at
+   this size is unreadable; movement is what tells you it's a sound control, and
+   staying grey is what tells you it isn't running yet. keyframes outrank the
+   inline scale, so the wave takes over and hands back on its own. */
+@keyframes soundWaveIdle {
+  0%, 100% { transform: scaleY(0.16); }
+  45%      { transform: scaleY(0.78); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sound-toggle.is-idle .sound-toggle-bar {
+    animation: soundWaveIdle 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* staggered so the crest travels across the bars instead of pumping */
+  .sound-toggle.is-idle .sound-toggle-bar:nth-child(2) { animation-delay: 0.13s; }
+  .sound-toggle.is-idle .sound-toggle-bar:nth-child(3) { animation-delay: 0.26s; }
+  .sound-toggle.is-idle .sound-toggle-bar:nth-child(4) { animation-delay: 0.39s; }
+}
+
+/* `--label-shift` lets a placement flip which side the wording slides out of,
+   so a control pinned to the right edge doesn't push it off screen. */
+.sound-toggle-label {
+  position: absolute;
+  left: 100%;
+  margin-left: 11px;
+  font-family: 'Helvetica Now Display', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(232, 232, 232, 0.75);
+  opacity: 0;
+  transform: translateX(var(--label-shift, -5px));
+  pointer-events: none;
+  transition: opacity 0.42s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sound-toggle.is-hinting .sound-toggle-label {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .sound-toggle:hover {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .sound-toggle:hover .sound-toggle-label {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.sound-toggle:focus-visible {
+  outline: 1px solid rgba(255, 255, 255, 0.35);
+  outline-offset: 2px;
+}
+
+.sound-toggle:focus-visible .sound-toggle-label {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* labelled variant inside the mobile menu */
+.sound-toggle-row {
+  width: 100%;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+}
+
+/* ── floating sound dock (everywhere the project rail isn't) ── */
+
+/* rides directly above the chat bubble and shares its shape, so the two read as
+   a pair of ambient controls rather than one stray button. */
+.sound-dock {
+  position: fixed;
+  right: 34px;
+  bottom: 92px;
+  z-index: 1000;
+  /* `backwards`, not `both`: a filled animation keeps its final frame applied
+     forever and animations outrank normal rules, which would stop anything else
+     from ever touching opacity again. */
+  animation: soundDockIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.5s backwards;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+@keyframes soundDockIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.9); }
+  to   { opacity: 1; transform: none; }
+}
+
+.sound-dock .sound-dock-button {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  background: #1a1a1a;
+  border: 1px solid rgba(201, 201, 201, 0.15);
+  color: rgba(201, 201, 201, 0.45);
+  transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+.sound-dock .sound-dock-button.is-on {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* pinned to the right edge, so the wording comes out of the left side */
+.sound-dock .sound-toggle-label {
+  --label-shift: 6px;
+  left: auto;
+  right: 100%;
+  margin-left: 0;
+  margin-right: 12px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .sound-dock .sound-dock-button:hover {
+    background: #1e1e1e;
+    border-color: rgba(201, 201, 201, 0.28);
+    color: rgba(255, 255, 255, 0.95);
+  }
+}
+
+/* the chat modal takes the whole screen — nothing should float over it */
+body:has(.chat-modal-overlay) .sound-dock {
+  opacity: 0;
+  transform: scale(0.6);
+  pointer-events: none;
+}
+
+/* phones keep the bottom-right corner for the chat bubble alone; the menu row
+   is the control at that size. */
+@media (max-width: 768px) {
+  .sound-dock {
+    display: none;
+  }
+}
+
+@media (min-width: 769px) {
+  .navbar-dropdown .sound-toggle-row {
+    display: none;
+  }
 }
 
 /* nav menu icon — hidden on desktop */
@@ -1285,7 +1509,7 @@ body::-webkit-scrollbar { display: none; }
 
   /* keep the nav ticks ~16px inside the column, mirroring desktop (logo 40 /
      nav 56) at this scale (logo 24 / nav 40). */
-  .showcase-nav {
+  .showcase-nav-column {
     left: 40px;
   }
 

@@ -4,6 +4,8 @@ import { flushSync } from "react-dom";
 import Lottie from "lottie-react";
 import Link from "next/link";
 import { ShowcaseProject } from "@/data/projects";
+import SoundToggle from "@/components/SoundToggle";
+import { sound } from "@/lib/sound/engine";
 
 interface ProjectShowcaseProps {
   projects: ShowcaseProject[];
@@ -203,6 +205,9 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
   const openNavPreview = useCallback((i: number) => {
     hoveredNavRef.current = i;
     setHoveredNav(i);
+    /* a detent per tick, pitched by position, so sweeping the column plays a
+       soft rising run — the picker-wheel feel, matched to the card that opens. */
+    sound.navDetent(i);
   }, []);
 
   const handleNavEnter = useCallback(
@@ -320,6 +325,9 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
 
     exitTimerRef.current = setTimeout(() => {
       displayIndexRef.current = nextIdx;
+      /* voiced on arrival, not on departure, so the sound lands with the new
+         project rather than ahead of it. */
+      sound.swap(step > 0 ? "up" : "down");
 
       flushSync(() => {
         setDisplayIndex(nextIdx);
@@ -376,6 +384,7 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
       if (!pc) return;
       if (i === displayIndexRef.current && i === targetIndexRef.current) return;
 
+      sound.select();
       jumpingRef.current = true;
       clearTimeout(exitTimerRef.current);
       clearTimeout(cooldownTimerRef.current);
@@ -524,46 +533,55 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
         <div className="showcase-panel-right" />
 
         {/* left-side jump navigator: a tick per project; hover reveals a glimpse,
-            click jumps straight to it (notion-style minimap). */}
-        <nav className="showcase-nav" aria-label="Jump to project">
-          {projects.map((p, i) => (
-            <button
-              key={p.slug}
-              type="button"
-              className={`showcase-nav-item ${i === displayIndex ? "is-active" : ""} ${hoveredNav === i ? "is-preview-open" : ""}`}
-              onClick={() => jumpTo(i)}
-              onMouseEnter={() => handleNavEnter(i)}
-              onMouseLeave={handleNavLeave}
-              onFocus={() => openNavPreview(i)}
-              onBlur={handleNavLeave}
-              aria-label={p.name}
-              aria-current={i === displayIndex ? "true" : undefined}
-            >
-              <span className="showcase-nav-line" />
-              <span className="showcase-nav-preview" aria-hidden="true">
-                <span className="showcase-nav-preview-thumb">
-                  {p.primaryImage ? (
-                    <img src={p.primaryImage.src} alt="" decoding="async" />
-                  ) : null}
-                </span>
-                <span className="showcase-nav-preview-meta">
-                  <span className="showcase-nav-preview-name">{p.name}</span>
-                  <span className="showcase-nav-preview-icons">
-                    {(p.disciplines ?? ["design"]).map((d) => (
-                      <span
-                        key={d}
-                        className="showcase-nav-preview-icon"
-                        title={d === "video" ? "Videography" : "Design"}
-                      >
-                        {d === "video" ? <VideoIcon /> : <DesignIcon />}
-                      </span>
-                    ))}
+            click jumps straight to it (notion-style minimap). the sound control
+            heads the same rail — it mostly speaks for this column, and it stays
+            put when the ticks are hidden on short viewports. */}
+        <div className="showcase-nav-column">
+          <SoundToggle
+            className="showcase-nav-sound"
+            showLabel
+            revealed={panelRevealed}
+          />
+          <nav className="showcase-nav" aria-label="Jump to project">
+            {projects.map((p, i) => (
+              <button
+                key={p.slug}
+                type="button"
+                className={`showcase-nav-item ${i === displayIndex ? "is-active" : ""} ${hoveredNav === i ? "is-preview-open" : ""}`}
+                onClick={() => jumpTo(i)}
+                onMouseEnter={() => handleNavEnter(i)}
+                onMouseLeave={handleNavLeave}
+                onFocus={() => openNavPreview(i)}
+                onBlur={handleNavLeave}
+                aria-label={p.name}
+                aria-current={i === displayIndex ? "true" : undefined}
+              >
+                <span className="showcase-nav-line" />
+                <span className="showcase-nav-preview" aria-hidden="true">
+                  <span className="showcase-nav-preview-thumb">
+                    {p.primaryImage ? (
+                      <img src={p.primaryImage.src} alt="" decoding="async" />
+                    ) : null}
+                  </span>
+                  <span className="showcase-nav-preview-meta">
+                    <span className="showcase-nav-preview-name">{p.name}</span>
+                    <span className="showcase-nav-preview-icons">
+                      {(p.disciplines ?? ["design"]).map((d) => (
+                        <span
+                          key={d}
+                          className="showcase-nav-preview-icon"
+                          title={d === "video" ? "Videography" : "Design"}
+                        >
+                          {d === "video" ? <VideoIcon /> : <DesignIcon />}
+                        </span>
+                      ))}
+                    </span>
                   </span>
                 </span>
-              </span>
-            </button>
-          ))}
-        </nav>
+              </button>
+            ))}
+          </nav>
+        </div>
 
         <div className="showcase-info">
           <p className="showcase-description">{project.description}</p>

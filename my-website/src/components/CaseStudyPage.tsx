@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import CaseStudySidebar from "@/components/CaseStudySidebar";
 import CaseStudySection from "@/components/CaseStudySection";
 import { CaseStudyData, getNextProject } from "@/data/projects";
+import { sound } from "@/lib/sound/engine";
 import Link from "next/link";
 
 interface CaseStudyPageProps {
@@ -14,6 +15,7 @@ interface CaseStudyPageProps {
 
 function ImageCarousel({ images }: { images: string[] }) {
   const [active, setActive] = useState(0);
+  const activeRef = useRef(0);
   const trackRef = useRef<HTMLDivElement>(null);
   const isScrollingRef = useRef(false);
 
@@ -21,6 +23,8 @@ function ImageCarousel({ images }: { images: string[] }) {
     const track = trackRef.current;
     if (!track) return;
     isScrollingRef.current = true;
+    sound.select();
+    activeRef.current = idx;
     setActive(idx);
     const slide = track.children[idx] as HTMLElement;
     if (slide) {
@@ -51,6 +55,12 @@ function ImageCarousel({ images }: { images: string[] }) {
           closestIdx = i;
         }
       });
+      if (closestIdx !== activeRef.current) {
+        /* only once the nearest slide changes — the wheel ticks already cover
+           the travel, this marks the landing. */
+        sound.snap();
+        activeRef.current = closestIdx;
+      }
       setActive(closestIdx);
     };
 
