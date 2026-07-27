@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { sound, type SoundState } from "@/lib/sound/engine";
 
-const INITIAL: SoundState = { enabled: true, active: false };
+const INITIAL: SoundState = { enabled: true, active: false, chosen: false };
 
 /* reads the ui-sound state and re-renders when it changes anywhere on the page.
    the initial value is the default rather than the stored one so the first

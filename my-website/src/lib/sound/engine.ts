@@ -15,12 +15,15 @@
 export type ScrollSource = "trackpad" | "mouse";
 
 export interface SoundState {
-  /* the viewer's preference. */
+  /* the viewer's preference, restored from a previous visit if they made one. */
   enabled: boolean;
   /* whether sound can actually be heard right now — enabled *and* past the
-     browser's gesture requirement. the toggle advertises itself until this is
-     true, because until then the site is silent whatever the preference says. */
+     browser's gesture requirement. */
   active: boolean;
+  /* whether the viewer has ever explicitly picked a state. only somebody who
+     hasn't gets the control waving at them; once they've chosen, the control
+     just reports their choice back, on this visit and every one after. */
+  chosen: boolean;
 }
 
 type Listener = (state: SoundState) => void;
@@ -84,6 +87,7 @@ class SoundEngine {
   private voices = 0;
 
   private enabled = true;
+  private chosen = false;
   private hydrated = false;
   private listeners = new Set<Listener>();
 
@@ -97,6 +101,7 @@ class SoundEngine {
     return {
       enabled: this.enabled,
       active: this.enabled && this.ctx?.state === "running",
+      chosen: this.chosen,
     };
   }
 
@@ -125,7 +130,15 @@ class SoundEngine {
     } catch {}
 
     if (stored === "on" || stored === "off") {
-      this.setEnabled(stored === "on");
+      this.chosen = true;
+      this.enabled = stored === "on";
+      /* someone who already said yes shouldn't have to say it again after a
+         refresh, so bring the graph up right now. browsers usually refuse
+         without a gesture, in which case it stays suspended and the viewer's
+         first click or keypress picks it up — but chrome does allow it for
+         sites you've engaged with before, and then sound simply carries on. */
+      if (this.enabled) this.unlock();
+      this.emit();
       return;
     }
 
@@ -133,25 +146,47 @@ class SoundEngine {
        down almost certainly does not want a site chirping at them either. */
     const calm = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     this.setEnabled(!calm);
+    this.emit();
   }
 
   setEnabled(next: boolean, persist = false) {
+    let changed = false;
+
     if (persist) {
       try {
         window.localStorage.setItem(STORAGE_KEY, next ? "on" : "off");
       } catch {}
+      if (!this.chosen) {
+        this.chosen = true;
+        changed = true;
+      }
     }
-    if (next === this.enabled) return;
-    this.enabled = next;
-    if (!next) this.suspend();
-    this.emit();
+
+    if (next !== this.enabled) {
+      this.enabled = next;
+      if (!next) this.suspend();
+      changed = true;
+    }
+
+    if (changed) this.emit();
   }
 
-  toggle() {
-    const next = !this.enabled;
-    this.setEnabled(next, true);
-    if (next) void this.start();
-    return next;
+  /* what pressing the control does, decided here from live state rather than
+     from whatever a component last rendered — the press that gets here has
+     already been through pointerdown, and a stale snapshot from before it would
+     mean the opposite of what the viewer sees on screen. */
+  press() {
+    if (!this.enabled) {
+      void this.start();
+      return;
+    }
+    /* the invite is on screen: nothing has ever been chosen, so this means
+       "start", not "stop something you've never heard". */
+    if (!this.chosen) {
+      void this.start();
+      return;
+    }
+    this.setEnabled(false, true);
   }
 
   /* let sound begin: called from a click, which is the gesture the browser has

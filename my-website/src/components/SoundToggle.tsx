@@ -29,31 +29,30 @@ export default function SoundToggle({
   revealed = false,
   onToggle,
 }: SoundToggleProps) {
-  const { enabled, active } = useSoundState();
+  const { enabled, active, chosen } = useSoundState();
   const [hinting, setHinting] = useState(false);
 
-  /* while nothing can be heard the bars ripple in a slow grey loop, which is
-     the only thing that reads as "this is a sound control" at 20px. it settles
-     into the static waveform the moment sound is actually playing. */
-  const idle = !active;
+  /* the bars ripple in a slow grey loop only for someone who has never picked a
+     state and hasn't heard anything yet — at 20px it's the only thing that reads
+     as "this is a sound control". a viewer who already chose sees their choice
+     reported straight back instead, including after a refresh. */
+  const inviting = enabled && !chosen && !active;
+  /* showing a definite "on": lit bars in their waveform shape, nothing waving. */
+  const settled = enabled && !inviting;
 
   useEffect(() => {
-    if (!showLabel || !revealed || active) return;
-    /* say it once, a beat after the rail arrives, then get out of the way. */
+    if (!showLabel || !revealed || !inviting) return;
+    /* say it once, a beat after the control arrives, then get out of the way. */
     const show = setTimeout(() => setHinting(true), 900);
     const hide = setTimeout(() => setHinting(false), 4600);
     return () => {
       clearTimeout(show);
       clearTimeout(hide);
     };
-  }, [showLabel, revealed, active]);
+  }, [showLabel, revealed, inviting]);
 
   const handleClick = () => {
-    /* the preference can be on while the browser still hasn't let any audio
-       through, and in that state a click means "start" — muting something the
-       viewer has never heard would be a strange thing to do. */
-    if (enabled && !active) void sound.start();
-    else sound.toggle();
+    sound.press();
     setHinting(false);
     onToggle?.();
   };
@@ -77,14 +76,16 @@ export default function SoundToggle({
           height="14"
           rx="1"
           fill="currentColor"
-          style={{ "--bar-scale": active ? scale : 0.14 } as React.CSSProperties}
+          style={{ "--bar-scale": settled ? scale : 0.14 } as React.CSSProperties}
         />
       ))}
     </svg>
   );
 
-  const label = active ? "sound off" : "sound on";
-  const state = `${idle ? "is-idle" : ""} ${active ? "is-on" : ""} ${hinting ? "is-hinting" : ""}`;
+  /* the wording is the action, so it follows what's on screen: an invite says
+     "sound on", a control already showing on offers to turn it off. */
+  const label = settled ? "sound off" : "sound on";
+  const state = `${inviting ? "is-idle" : ""} ${settled ? "is-on" : ""} ${hinting ? "is-hinting" : ""}`;
 
   if (variant === "row") {
     return (
@@ -92,7 +93,8 @@ export default function SoundToggle({
         type="button"
         className={`nav-link sound-toggle sound-toggle-row ${state} ${className}`}
         onClick={handleClick}
-        aria-pressed={active}
+        data-sound-control
+        aria-pressed={settled}
         aria-label={label}
       >
         <span className="nav-link-inner">sound</span>
@@ -106,7 +108,8 @@ export default function SoundToggle({
       type="button"
       className={`sound-toggle ${state} ${className}`}
       onClick={handleClick}
-      aria-pressed={active}
+      data-sound-control
+      aria-pressed={settled}
       aria-label={label}
       title={label}
     >

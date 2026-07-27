@@ -14,7 +14,15 @@ export default function SoundEffects() {
   useEffect(() => {
     sound.hydrate();
 
-    const create = () => sound.unlock();
+    const create = (event: Event) => {
+      /* the sound control is the one place a press must not quietly start audio
+         on its own. its pointerdown arrives here before its click handler runs,
+         so unlocking now would flip the control to "playing" and turn that same
+         click into a mute — one press, and the viewer gets silence. */
+      const target = event.target as Element | null;
+      if (target?.closest?.("[data-sound-control]")) return;
+      sound.unlock();
+    };
     /* a wheel event is not a user gesture, so it can't *start* audio — but once
        the viewer has clicked anywhere it can wake a context that was suspended
        while sound was off. */
