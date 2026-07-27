@@ -32,13 +32,16 @@ export default function SoundToggle({
   const { enabled, active, chosen } = useSoundState();
   const [hinting, setHinting] = useState(false);
 
-  /* the bars ripple in a slow grey loop only for someone who has never picked a
-     state and hasn't heard anything yet — at 20px it's the only thing that reads
-     as "this is a sound control". a viewer who already chose sees their choice
-     reported straight back instead, including after a refresh. */
+  /* nobody has picked a state yet and nothing has been heard, so the control is
+     still making its case. distinct from a deliberate mute, because a viewer who
+     has already chosen shouldn't be pitched at again on every visit. */
   const inviting = enabled && !chosen && !active;
-  /* showing a definite "on": lit bars in their waveform shape, nothing waving. */
+  /* showing a definite "on": lit bars, waveform shape, nothing waving. */
   const settled = enabled && !inviting;
+  /* anything other than that ripples: muted or still inviting, the slow grey
+     loop is what reads as "this is a sound control" at 20px. only the wording
+     distinguishes the two, and only the invite volunteers it. */
+  const rippling = !settled;
 
   useEffect(() => {
     if (!showLabel || !revealed || !inviting) return;
@@ -85,7 +88,7 @@ export default function SoundToggle({
   /* the wording is the action, so it follows what's on screen: an invite says
      "sound on", a control already showing on offers to turn it off. */
   const label = settled ? "sound off" : "sound on";
-  const state = `${inviting ? "is-idle" : ""} ${settled ? "is-on" : ""} ${hinting ? "is-hinting" : ""}`;
+  const state = `${rippling ? "is-idle" : ""} ${settled ? "is-on" : ""} ${hinting ? "is-hinting" : ""}`;
 
   if (variant === "row") {
     return (
