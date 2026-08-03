@@ -811,8 +811,16 @@ body::-webkit-scrollbar { display: none; }
 .showcase-mockup-link {
   display: block;
   text-decoration: none;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.3s ease,
+              transform var(--motion-press) var(--motion-ease-out);
   cursor: pointer;
+}
+
+/* the primary thing to click on the home page, and it answered hover but not
+   press. 0.99 because the surface is huge: the same 3% that reads as a squeeze
+   on a button reads as the whole layout lurching here. */
+.showcase-mockup-link:active {
+  transform: scale(0.99);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -947,12 +955,19 @@ body::-webkit-scrollbar { display: none; }
   align-items: center;
   justify-content: center;
   border-radius: 12px;
-  transition: color 0.25s ease;
+  transition: color 0.25s ease,
+              opacity var(--motion-press) var(--motion-ease-out);
   position: relative;
 }
 
 .nav-link:hover {
   color: rgba(255, 255, 255, 0.8);
+}
+
+/* a text link gets a dim rather than a squeeze: scaling type is distracting, and
+   nav is used often enough that the feedback should be near-imperceptible. */
+.nav-link:active {
+  opacity: 0.55;
 }
 
 .nav-link.active {
@@ -1285,6 +1300,11 @@ body:has(.chat-modal-overlay) .sound-dock {
 .navbar-dropdown-close:hover {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.4);
+}
+
+.navbar-dropdown-close:active {
+  transform: scale(0.92);
+  transition-duration: var(--motion-press);
 }
 
 .navbar-dropdown-inner {
@@ -2160,7 +2180,10 @@ body:has(.chat-modal-overlay) .sound-dock {
   z-index: 9999;
   opacity: 0;
   transform: scale(0.8);
-  transition: all 0.3s ease;
+  transition: opacity 0.3s ease,
+              transform 0.3s ease,
+              background var(--motion-hover) ease,
+              border-color var(--motion-hover) ease;
   transition-delay: 0.35s;
   pointer-events: auto;
 }
@@ -2174,7 +2197,8 @@ body:has(.chat-modal-overlay) .sound-dock {
 .chat-modal-close.closing {
   opacity: 0;
   transform: scale(0.8);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.4s var(--motion-ease-in-out),
+              transform 0.4s var(--motion-ease-in-out);
   transition-delay: 0s;
 }
 
@@ -2182,6 +2206,13 @@ body:has(.chat-modal-overlay) .sound-dock {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.4);
   transition-delay: 0s;
+}
+
+/* a 48px circle takes the standard squeeze; the press duration is set here so
+   it stays quick even though the entry is a deliberate 300ms */
+.chat-modal-close:active {
+  transform: scale(0.92);
+  transition-duration: var(--motion-press);
 }
 
 /* content container */
@@ -3447,7 +3478,10 @@ body:has(.chat-modal-overlay) .sound-dock {
   z-index: 9999;
   opacity: 0;
   transform: scale(0.8);
-  transition: all 0.3s ease;
+  transition: opacity 0.3s ease,
+              transform 0.3s ease,
+              background var(--motion-hover) ease,
+              border-color var(--motion-hover) ease;
   pointer-events: auto;
 }
 
@@ -3459,6 +3493,11 @@ body:has(.chat-modal-overlay) .sound-dock {
 .book-modal-close:hover {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.4);
+}
+
+.book-modal-close:active {
+  transform: scale(0.92);
+  transition-duration: var(--motion-press);
 }
 
 .book-modal-content {
@@ -3631,6 +3670,11 @@ body:has(.chat-modal-overlay) .sound-dock {
 
 .cs-wip-overlay-close:hover {
   color: rgba(201, 201, 201, 0.9);
+}
+
+.cs-wip-overlay-close:active {
+  transform: scale(0.92);
+  transition-duration: var(--motion-press);
 }
 
 /* ── hero ── */
@@ -3873,7 +3917,10 @@ body:has(.chat-modal-overlay) .sound-dock {
   letter-spacing: 0.04em;
   color: rgba(201, 201, 201, 0.6);
   text-decoration: none;
-  transition: all 0.25s ease;
+  transition: color var(--motion-hover) ease,
+              border-color var(--motion-hover) ease,
+              background var(--motion-hover) ease,
+              transform var(--motion-press) var(--motion-ease-out);
   margin-top: 12px;
 }
 
@@ -3881,6 +3928,11 @@ body:has(.chat-modal-overlay) .sound-dock {
   border-color: rgba(201, 201, 201, 0.35);
   color: #c9c9c9;
   background: rgba(255, 255, 255, 0.03);
+}
+
+.cs-sidebar-next:active {
+  transform: scale(0.97);
+  transition-duration: var(--motion-press);
 }
 
 /* ── content column ── */
@@ -4229,7 +4281,10 @@ body:has(.chat-modal-overlay) .sound-dock {
   text-decoration: none;
   color: rgba(201, 201, 201, 0.6);
   font-size: 13px;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: color var(--motion-hover) ease,
+              border-color var(--motion-hover) ease,
+              background var(--motion-hover) ease,
+              transform var(--motion-press) var(--motion-ease-out);
 }
 
 .cs-next-project-link:hover {
@@ -4237,6 +4292,11 @@ body:has(.chat-modal-overlay) .sound-dock {
   color: #fff;
   background: rgba(255, 255, 255, 0.03);
   transform: translateX(4px);
+}
+
+.cs-next-project-link:active {
+  transform: scale(0.98);
+  transition-duration: var(--motion-press);
 }
 
 .cs-next-label {
@@ -4653,7 +4713,10 @@ body:has(.chat-modal-overlay) .sound-dock {
   justify-content: center;
   opacity: 0;
   transform: scale(0.8);
-  transition: all 0.3s ease;
+  transition: opacity 0.3s ease,
+              transform 0.3s ease,
+              background var(--motion-hover) ease,
+              border-color var(--motion-hover) ease;
   pointer-events: auto;
 }
 
@@ -4666,13 +4729,19 @@ body:has(.chat-modal-overlay) .sound-dock {
 .reel-modal-close.closing {
   opacity: 0;
   transform: scale(0.8);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.4s var(--motion-ease-in-out),
+              transform 0.4s var(--motion-ease-in-out);
   transition-delay: 0s;
 }
 
 .reel-modal-close:hover {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.4);
+}
+
+.reel-modal-close:active {
+  transform: scale(0.92);
+  transition-duration: var(--motion-press);
 }
 
 /* scrollable reel container */
@@ -4762,7 +4831,21 @@ body:has(.chat-modal-overlay) .sound-dock {
   background: rgba(201, 201, 201, 0.15);
   border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background var(--motion-hover) ease,
+              transform var(--motion-press) var(--motion-ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .reel-modal-dot:hover {
+    background: rgba(201, 201, 201, 0.4);
+  }
+}
+
+/* 6px target, so it grows rather than shrinks: a shrinking dot disappears under
+   the cursor at the exact moment it is pressed */
+.reel-modal-dot:active {
+  transform: scale(1.4);
+  transition-duration: var(--motion-press);
 }
 
 .reel-modal-dot-active {
@@ -4897,7 +4980,17 @@ body:has(.chat-modal-overlay) .sound-dock {
   .reel-dock-action:active,
   .sound-toggle:active,
   .sound-dock .sound-dock-button:active,
-  .cs-carousel-dot:active {
+  .cs-carousel-dot:active,
+  .reel-modal-dot:active,
+  .chat-modal-close:active,
+  .book-modal-close:active,
+  .reel-modal-close:active,
+  .navbar-dropdown-close:active,
+  .cs-wip-overlay-close:active,
+  .cs-sidebar-next:active,
+  .cs-next-project-link:active,
+  .showcase-mockup-link:active,
+  .exp-card:active {
     transform: none;
     opacity: 0.65;
   }

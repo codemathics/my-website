@@ -59,6 +59,12 @@
   overflow: hidden;
   text-decoration: none;
   color: inherit;
+  transition: transform var(--motion-press) var(--motion-ease-out),
+              border-color var(--motion-hover) ease;
+}
+
+.exp-card:active {
+  transform: scale(0.985);
 }
 .exp-card-canvas {
   position: relative;
