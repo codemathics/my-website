@@ -2,7 +2,9 @@
 
 Every plan written by `improve-animations` follows this structure. The executor may be a less capable model with zero context and zero taste — the plan must contain everything, exactly. No references to "the audit above" or "the easing we discussed."
 
-```markdown
+The template is wrapped in `~~~` below so the code fences *inside* it are ordinary triple-backtick fences. Copy them through to the generated plan as-is.
+
+~~~markdown
 # NNN — <Short imperative title>
 
 - **Status**: TODO
@@ -16,23 +18,23 @@ Every plan written by `improve-animations` follows this structure. The executor 
 What is wrong, where, and why it matters to how the product feels. Cite every
 location as `path/to/file.tsx:123` and include the current code verbatim:
 
-​```css
+```css
 /* src/components/dropdown.css:14 — current */
 .dropdown { transition: all 400ms ease-in; }
-​```
+```
 
 ## Target
 
 The exact end state. Every value spelled out — curves, durations, spring
 configs, media queries. Never "use a nicer easing":
 
-​```css
+```css
 /* target */
 .dropdown {
   transition: transform 200ms var(--ease-out), opacity 200ms var(--ease-out);
   transform-origin: var(--transform-origin);
 }
-​```
+```
 
 ## Repo conventions to follow
 
@@ -63,7 +65,7 @@ imitate (token names, file placement, prop patterns):
   - In DevTools, set playback to 10% (Animations panel) and confirm <detail>.
   - Toggle `prefers-reduced-motion` (Rendering panel) and confirm movement is dropped but opacity feedback remains.
 - **Done when**: <machine- or eye-checkable completion criteria>.
-```
+~~~
 
 ## Notes for the plan author
 

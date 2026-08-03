@@ -101,13 +101,22 @@ animate(el, { y: target }, { type: 'spring', bounce: 0.2, duration: 0.4 });
 
 When a gesture ends, the animation must **continue at the finger's exact velocity**, so there's no visible seam between dragging and animating. This is the detail that most separates "fluid" from "fine."
 
-Pass the pointer's release velocity as the spring's initial velocity. Some spring APIs want **relative** velocity — normalize it by the remaining distance to the target:
+Pass the pointer's release velocity as the spring's initial velocity. **Framer Motion / Motion take absolute px/s velocity directly** (the `velocity` option), so you usually hand them the raw release value and stop there.
 
-```
-relativeVelocity = gestureVelocity / (targetValue − currentValue)
+Only normalize when the spring API asks for **relative** velocity — velocity expressed in fractions of the remaining distance per second. Guard the division: when the element is already at its target the remaining distance is zero, and a nearly-arrived element produces an explosive normalized value.
+
+```js
+// Relative velocity = fractions of the remaining distance per second.
+const remaining = targetValue - currentValue;
+
+// No distance left means there is nothing to animate — hand over 0 (or skip the spring entirely)
+// rather than dividing by ~0 and launching the element at an absurd speed.
+const EPSILON = 0.5; // sub-pixel: below this the gap is not visible anyway
+const relativeVelocity =
+  Math.abs(remaining) < EPSILON ? 0 : gestureVelocity / remaining;
 ```
 
-Example: element at `y=50`, target `y=150` (100px to go), finger moving 50px/s → initial spring velocity = `50 / 100 = 0.5`. Framer Motion / Motion take absolute px/s velocity directly (`velocity` option), so you usually hand it the raw value.
+Example: element at `y=50`, target `y=150` (100px to go), finger moving 50px/s → initial spring velocity = `50 / 100 = 0.5`.
 
 ## 6. Momentum projection — animate to where the gesture is *going*
 
@@ -166,7 +175,8 @@ Smoothness is about *what's in the frames*, not just the frame rate.
 
 - Keep the per-frame positional change below the perception threshold to avoid strobing.
 - For very fast motion, a subtle **motion blur / stretch** encodes speed and reads better than a hard sharp streak.
-- `requestAnimationFrame` is the web's display-synced clock (Apple uses `CADisplayLink`). Animate only compositor-friendly properties — `transform` and `opacity` — and hint with `will-change` where motion is imminent.
+- `requestAnimationFrame` is the web's display-synced clock (Apple uses `CADisplayLink`). Prefer the compositor-friendly properties — `transform` and `opacity` — and hint with `will-change` where motion is imminent.
+- The material work in §12 deliberately animates `backdrop-filter` and blur radius, which paint rather than composite. That is a justified exception, not a free one: keep the blurred surface as small as the design allows, and profile these transitions on the slowest device you support instead of assuming they are accelerated.
 
 ## 12. Materials & depth — translucency conveys hierarchy
 
@@ -178,7 +188,7 @@ Apple uses translucent materials as a floating functional layer that brings stru
 - **Dim to focus, separate to keep flow.** A modal task pairs the surface with a dimming scrim and pushes the background back/down. A parallel, non-blocking panel uses translucency and offset *without* a scrim so the flow isn't broken. For stacked sheets, progressively dim and push back each parent layer.
 - **Vibrancy keeps text legible over changing backgrounds.** Over blurred/translucent surfaces, don't use flat gray text — use higher-contrast, slightly heavier weight, and a small letter-spacing bump. Put color on a solid layer, not the translucent foreground.
 - **Scroll edge effects, not hard dividers.** Instead of a 1px border under a sticky header, fade a small blur/gradient mask where content meets floating chrome — only where floating UI actually overlaps content.
-- **Materialize, don't just fade.** For glass/blur surfaces, animate blur radius and scale together on enter/exit, so the surface reads as a real material arriving rather than a plain opacity fade.
+- **Materialize, don't just fade.** For glass/blur surfaces, animate blur radius and scale together on enter/exit, so the surface reads as a real material arriving rather than a plain opacity fade. Animating blur repaints every frame (see §11) — keep the surface small and profile it.
 
 ```css
 .toolbar {
@@ -201,7 +211,7 @@ Three rules for combining senses (from *Designing Audio-Haptic Experiences*):
 Reduced motion doesn't mean *no* feedback — it means a gentler, non-vestibular equivalent. Respond to three independent signals and bake them into your components:
 
 - **`prefers-reduced-motion: reduce`** — replace slides/springs/parallax with short opacity **cross-fades or static transitions**. Drop elastic/overshoot. Keep opacity/color changes that aid comprehension.
-- **`prefers-reduced-transparency: reduce`** — make translucent surfaces frostier/solid: raise background opacity, drop the blur.
+- **`prefers-reduced-transparency: reduce`** — make translucent surfaces frostier/solid: raise background opacity, drop the blur. Treat this one as **progressive enhancement, not the accessibility mechanism**: it is a Chromium-only media feature (118+) that Firefox and Safari don't implement, so a translucent surface must be legible on its own. Give every glass surface an opaque-enough baseline — background opacity high enough to hold contrast against the busiest content that can scroll under it, with a defined border where the edge would otherwise disappear — and let the query deepen that for the users whose browsers report it.
 - **`prefers-contrast: more`** — near-solid backgrounds with a defined, contrasting border.
 
 Also: avoid full-viewport moving backgrounds, slow looping oscillations (near 0.2 Hz / one cycle per 5s), and abrupt brightness jumps (ease dark↔light theme changes). Make large moving objects semi-transparent while they travel, and fade big surfaces out during a large reposition and back in once settled.
@@ -210,6 +220,7 @@ Also: avoid full-viewport moving backgrounds, slow looping oscillations (near 0.
 @media (prefers-reduced-motion: reduce) {
   .sheet { transition: opacity 200ms ease; transform: none !important; }
 }
+/* Enhancement only — .toolbar's own background must already hold contrast without this. */
 @media (prefers-reduced-transparency: reduce) {
   .toolbar { background: white; backdrop-filter: none; }
 }
