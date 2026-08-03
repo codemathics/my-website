@@ -26,12 +26,16 @@
      strong ease-out; things moving on screen get the ease-in-out. durations are
      the ceilings, not targets: ui motion above ~300ms starts to feel like it is
      waiting on you, and a press has to answer immediately or the whole interface
-     stops feeling direct. */
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
-  --press: 120ms;
-  --hover: 200ms;
-  --reveal: 260ms;
+     stops feeling direct.
+
+     prefixed `motion-` because tailwind already defines --ease-out and
+     --ease-in-out as theme tokens: an unprefixed name here would quietly
+     retarget every tailwind easing utility on the site. */
+  --motion-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-press: 120ms;
+  --motion-hover: 200ms;
+  --motion-reveal: 260ms;
   /* system font fallbacks (no network fetch) */
   --font-geist-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-geist-mono: ui-monospace, "Cascadia Code", "Source Code Pro", monospace;
@@ -99,10 +103,10 @@ body::-webkit-scrollbar { display: none; }
   color: #C9C9C9;
   /* named properties rather than `all`: `all` sweeps up backdrop-filter and
      box-shadow too, which are expensive and were never meant to tween. */
-  transition: background var(--hover) ease,
-              border-color var(--hover) ease,
-              transform var(--press) var(--ease-out),
-              box-shadow var(--hover) ease;
+  transition: background var(--motion-hover) ease,
+              border-color var(--motion-hover) ease,
+              transform var(--motion-press) var(--motion-ease-out),
+              box-shadow var(--motion-hover) ease;
   backdrop-filter: blur(10px);
   text-decoration: none;
   display: inline-block;
@@ -607,8 +611,8 @@ body::-webkit-scrollbar { display: none; }
      width runs layout and paint on every frame of every sweep, where a transform
      is composited on its own. the ratios below are the old pixel widths: 26/16
      and 30/16. */
-  transition: transform var(--hover) var(--ease-out),
-              background-color var(--hover) ease;
+  transition: transform var(--motion-hover) var(--motion-ease-out),
+              background-color var(--motion-hover) ease;
 }
 
 .showcase-nav-item:hover .showcase-nav-line,
@@ -979,8 +983,8 @@ body::-webkit-scrollbar { display: none; }
   border-radius: 12px;
   color: rgba(255, 255, 255, 0.35);
   cursor: pointer;
-  transition: color var(--hover) ease,
-              transform var(--press) var(--ease-out);
+  transition: color var(--motion-hover) ease,
+              transform var(--motion-press) var(--motion-ease-out);
 }
 
 .sound-toggle.is-on {
@@ -1004,7 +1008,7 @@ body::-webkit-scrollbar { display: none; }
   transform: scaleY(var(--bar-scale, 1));
   transform-box: fill-box;
   transform-origin: center;
-  transition: transform var(--reveal) var(--ease-out);
+  transition: transform var(--motion-reveal) var(--motion-ease-out);
 }
 
 /* 40ms apart, so the bars read as one gesture rather than four */
@@ -1050,8 +1054,8 @@ body::-webkit-scrollbar { display: none; }
   pointer-events: none;
   /* a few words appearing next to an icon is tooltip-sized work, so it belongs
      in the 125 to 200ms band. at 420ms it lagged behind the pointer. */
-  transition: opacity 180ms var(--ease-out),
-              transform 180ms var(--ease-out);
+  transition: opacity 180ms var(--motion-ease-out),
+              transform 180ms var(--motion-ease-out);
 }
 
 .sound-toggle.is-hinting .sound-toggle-label {
@@ -1100,8 +1104,8 @@ body::-webkit-scrollbar { display: none; }
   /* `backwards`, not `both`: a filled animation keeps its final frame applied
      forever and animations outrank normal rules, which would stop anything else
      from ever touching opacity again. */
-  animation: soundDockIn 420ms var(--ease-out) 300ms backwards;
-  transition: opacity var(--reveal) ease, transform var(--reveal) ease;
+  animation: soundDockIn 420ms var(--motion-ease-out) 300ms backwards;
+  transition: opacity var(--motion-reveal) ease, transform var(--motion-reveal) ease;
 }
 
 @keyframes soundDockIn {
@@ -1117,10 +1121,10 @@ body::-webkit-scrollbar { display: none; }
   background: #1a1a1a;
   border: 1px solid rgba(201, 201, 201, 0.15);
   color: rgba(201, 201, 201, 0.45);
-  transition: background var(--hover) ease,
-              border-color var(--hover) ease,
-              color var(--hover) ease,
-              transform var(--press) var(--ease-out);
+  transition: background var(--motion-hover) ease,
+              border-color var(--motion-hover) ease,
+              color var(--motion-hover) ease,
+              transform var(--motion-press) var(--motion-ease-out);
 }
 
 /* 40px circle, so it can take the standard press squeeze */
@@ -1182,7 +1186,7 @@ body:has(.chat-modal-overlay) .sound-dock {
   border: none;
   cursor: pointer;
   transition: opacity 0.25s ease,
-              transform var(--press) var(--ease-out);
+              transform var(--motion-press) var(--motion-ease-out);
 }
 
 .navbar-toggle:active {
@@ -4164,8 +4168,8 @@ body:has(.chat-modal-overlay) .sound-dock {
   background: rgba(201, 201, 201, 0.15);
   border: none;
   cursor: pointer;
-  transition: background var(--hover) ease,
-              transform var(--press) var(--ease-out);
+  transition: background var(--motion-hover) ease,
+              transform var(--motion-press) var(--motion-ease-out);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -4279,10 +4283,10 @@ body:has(.chat-modal-overlay) .sound-dock {
   letter-spacing: 0.05em;
   color: rgba(201, 201, 201, 0.4);
   cursor: pointer;
-  transition: color var(--hover) ease,
-              background var(--hover) ease,
-              border-color var(--hover) ease,
-              transform var(--press) var(--ease-out);
+  transition: color var(--motion-hover) ease,
+              background var(--motion-hover) ease,
+              border-color var(--motion-hover) ease,
+              transform var(--motion-press) var(--motion-ease-out);
   white-space: nowrap;
 }
 
@@ -4445,8 +4449,8 @@ body:has(.chat-modal-overlay) .sound-dock {
   cursor: pointer;
   z-index: 2;
   transition: opacity 0.25s ease,
-              background var(--hover) ease,
-              transform var(--press) var(--ease-out);
+              background var(--motion-hover) ease,
+              transform var(--motion-press) var(--motion-ease-out);
 }
 
 .reel-dock-action:active {
