@@ -86,8 +86,11 @@ In a framework, keep the class names and structure; only the rendering syntax ch
   transition: color 150ms ease-out;
 }
 
-.proto-picker-item:hover {
-  color: rgba(255, 255, 255, 0.85);
+/* Gated so a tap on a touch device doesn't leave an item stuck in the hover state. */
+@media (hover: hover) and (pointer: fine) {
+  .proto-picker-item:hover {
+    color: rgba(255, 255, 255, 0.85);
+  }
 }
 
 .proto-picker-item:active {
@@ -132,9 +135,10 @@ In a framework, keep the class names and structure; only the rendering syntax ch
 
 The contract is fixed regardless of how the harness renders:
 
-- Number keys `1–N` and `←`/`→` switch variants; `R` replays. Ignore key events when focus is in an input, textarea, select, or contenteditable, or when a modifier is held.
+- Number keys `1–N` and `←`/`→` switch variants; `R` replays. Ignore key events when focus is in an input, textarea, select, or contenteditable, or when a modifier is held. The arrow keys are handled, so they call `preventDefault()` and don't also scroll the page.
 - Clicking an item switches to it; exactly one item carries `data-active` and `aria-current="true"` at all times, and the highlight slides to it.
-- Selection persists across reload via a URL param (`?v=2`), falling back to variant 1. The highlight takes its initial position without animating (`data-ready` is added after first paint).
+- Hover styling is gated behind `@media (hover: hover) and (pointer: fine)`, so tapping an item on a touch device doesn't leave it stuck in the hover state.
+- Selection persists across reload via a URL param (`?v=2`), falling back to variant 1 whenever the param is missing, non-numeric, or out of range — an out-of-range value must still mount variant 1, never leave the stage empty. The highlight takes its initial position without animating (`data-ready` is added after first paint).
 - Switching re-mounts the variant (so entrance animations re-run); the replay key re-mounts without switching.
 
 ## Reference wiring
@@ -156,10 +160,14 @@ function moveHighlight() {
   highlight.style.transform = `translateX(${el.offsetLeft}px)`;
 }
 
+let pendingMount = 0;
+
 function mount(i) {
   stage.innerHTML = '';
-  // Clear first, render next frame, so entrance animations re-run.
-  requestAnimationFrame(() => { stage.innerHTML = variants[i](); });
+  // Clear first, render next frame, so entrance animations re-run. Cancel any frame still
+  // pending so a variant that was superseded mid-flip never renders or runs its side effects.
+  cancelAnimationFrame(pendingMount);
+  pendingMount = requestAnimationFrame(() => { stage.innerHTML = variants[i](); });
 }
 
 function setActive(i) {
@@ -186,12 +194,22 @@ document.addEventListener('keydown', (e) => {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   const num = parseInt(e.key, 10);
   if (num >= 1 && num <= variants.length) setActive(num - 1);
-  else if (e.key === 'ArrowRight') setActive((current + 1) % variants.length);
-  else if (e.key === 'ArrowLeft') setActive((current - 1 + variants.length) % variants.length);
+  // Claim the arrow keys, so flipping variants doesn't also scroll the page.
+  else if (e.key === 'ArrowRight') { e.preventDefault(); setActive((current + 1) % variants.length); }
+  else if (e.key === 'ArrowLeft') { e.preventDefault(); setActive((current - 1 + variants.length) % variants.length); }
   else if (e.key === 'r' || e.key === 'R') mount(current);
 });
 
-setActive((parseInt(new URLSearchParams(location.search).get('v'), 10) || 1) - 1);
+// Normalize `?v=` before activating: anything missing, non-numeric, or out of range is variant 1,
+// so a stale or hand-edited URL still mounts something instead of leaving the stage empty.
+const requestedVariant = Number(new URLSearchParams(location.search).get('v'));
+const initialVariant =
+  Number.isInteger(requestedVariant) &&
+  requestedVariant >= 1 &&
+  requestedVariant <= variants.length
+    ? requestedVariant - 1
+    : 0;
+setActive(initialVariant);
 // Enable the slide only after first paint, so load doesn't animate.
 requestAnimationFrame(() => requestAnimationFrame(() => picker.setAttribute('data-ready', '')));
 ```

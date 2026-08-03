@@ -26,13 +26,13 @@ Every animation in the diff is measured against these. A violation is a finding.
 
 3. **Responsive easing.** Entering/exiting elements use `ease-out` or a strong custom curve. `ease-in` on UI is a block — it delays the moment the user watches most. Built-in CSS easings are too weak; expect custom cubic-beziers.
 
-4. **Sub-300ms UI.** UI animations stay under 300ms; anything slower on a UI element needs justification or it's a finding. Per-element budgets live in [STANDARDS.md](STANDARDS.md).
+4. **Sub-300ms UI.** Most UI animations stay under 300ms; anything slower needs justification or it's a finding. Modals and drawers are the documented exception, allowed 200–500ms for their larger surface. Per-element budgets live in [STANDARDS.md](STANDARDS.md).
 
 5. **Origin & physical correctness.** Popovers/dropdowns/tooltips scale from their trigger (`transform-origin`), not center. Never animate from `scale(0)` — start from `scale(0.9–0.97)` + opacity (Modals are exempt — they stay centered.)
 
 6. **Interruptibility.** Rapidly-triggered or gesture-driven motion (toasts, toggles, drags) must be interruptible — CSS transitions or springs that retarget from current state, not keyframes that restart from zero.
 
-7. **GPU-only properties.** Animate `transform` and `opacity` only. Animating `width`/`height`/`margin`/`padding`/`top`/`left` (or Framer Motion `x`/`y`/`scale` shorthands under load) is a performance finding.
+7. **Compositor-friendly by default.** `transform` and `opacity` are the preferred properties; animating `width`/`height`/`margin`/`padding`/`top`/`left` is a performance finding unless the interaction requires it and the diff says why. `clip-path`, `filter`/`backdrop-filter`, and height transitions are documented exceptions whose acceleration is conditional — accept them when justified, and expect performance-sensitive motion to have been profiled rather than assumed.
 
 8. **Accessibility.** `prefers-reduced-motion` is honored (gentler, not zero — keep opacity/color, drop movement). Hover animations are gated behind `@media (hover: hover) and (pointer: fine)`.
 
@@ -48,11 +48,11 @@ Flag these on sight, hard:
 - `scale(0)` or pure-fade entrances with no initial transform
 - `ease-in` on any UI interaction; weak built-in easing on a deliberate animation
 - Animation on a keyboard shortcut, command-palette toggle, or 100+/day action
-- UI duration > 300ms with no stated reason
+- UI duration > 300ms with no stated reason (modals and drawers excepted up to 500ms)
 - `transform-origin: center` on a trigger-anchored popover/dropdown/tooltip
 - Keyframes on toasts, toggles, or anything added/triggered rapidly
-- Animating layout properties (`width`/`height`/`margin`/`padding`/`top`/`left`)
-- Framer Motion `x`/`y`/`scale` props on motion that runs while the page is busy
+- Animating layout properties (`width`/`height`/`margin`/`padding`/`top`/`left`) with no stated reason
+- Unprofiled `clip-path`/`filter`/`backdrop-filter` motion over a large area
 - Updating a CSS variable on a parent to drive a child transform (style recalc storm)
 - Missing `prefers-reduced-motion` handling on movement
 - Ungated `:hover` motion
@@ -68,7 +68,7 @@ When proposing fixes, prefer earlier moves over later ones:
 3. **Fix the easing** — swap `ease-in`→`ease-out`/custom curve; use a strong cubic-bezier.
 4. **Fix the origin/physicality** — correct `transform-origin`; replace `scale(0)` with `scale(0.95)`+opacity.
 5. **Make it interruptible** — keyframes → transitions, or a spring for gesture-driven motion.
-6. **Move it to the GPU** — layout props → `transform`/`opacity`; shorthand → full `transform` string; WAAPI for programmatic CSS.
+6. **Move it to the compositor** — layout props → `transform`/`opacity`; WAAPI for programmatic CSS. If frames still drop while the main thread is busy, profile first, then consider a single `transform` string over independent Motion shorthands.
 7. **Asymmetric timing** — slow the deliberate phase, snap the response.
 8. **Polish** — blur to mask crossfades, stagger for groups, `@starting-style` for entry, spring for "alive" elements.
 9. **Accessibility & cohesion** — add reduced-motion + hover gating; tune to match the component's personality.
