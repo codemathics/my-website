@@ -223,6 +223,15 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
     [openNavPreview]
   );
 
+  /* the cue belongs on pointer-down, not on the click that follows it. a press is
+     the moment the viewer is waiting to be answered, and the click can be tens of
+     milliseconds later, which is long enough to feel like the site hesitated.
+     silent when the tick is already the current project, since nothing happens. */
+  const handleNavPress = useCallback((i: number) => {
+    if (i === displayIndexRef.current && i === targetIndexRef.current) return;
+    sound.select();
+  }, []);
+
   const handleNavLeave = useCallback(() => {
     clearTimeout(navOpenTimerRef.current);
     navCloseTimerRef.current = setTimeout(() => {
@@ -384,7 +393,6 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
       if (!pc) return;
       if (i === displayIndexRef.current && i === targetIndexRef.current) return;
 
-      sound.select();
       jumpingRef.current = true;
       clearTimeout(exitTimerRef.current);
       clearTimeout(cooldownTimerRef.current);
@@ -549,6 +557,7 @@ function ProjectShowcase({ projects }: ProjectShowcaseProps) {
                 type="button"
                 className={`showcase-nav-item ${i === displayIndex ? "is-active" : ""} ${hoveredNav === i ? "is-preview-open" : ""}`}
                 onClick={() => jumpTo(i)}
+                onPointerDown={() => handleNavPress(i)}
                 onMouseEnter={() => handleNavEnter(i)}
                 onMouseLeave={handleNavLeave}
                 onFocus={() => openNavPreview(i)}

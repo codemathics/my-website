@@ -19,6 +19,19 @@
 :root {
   --background: #010101;
   --foreground: #C9C9C9;
+
+  /* ── motion ──
+     the curve this site already uses everywhere, named. built-in css easings are
+     too weak to read as deliberate, so entering and exiting motion gets the
+     strong ease-out; things moving on screen get the ease-in-out. durations are
+     the ceilings, not targets: ui motion above ~300ms starts to feel like it is
+     waiting on you, and a press has to answer immediately or the whole interface
+     stops feeling direct. */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --press: 120ms;
+  --hover: 200ms;
+  --reveal: 260ms;
   /* system font fallbacks (no network fetch) */
   --font-geist-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-geist-mono: ui-monospace, "Cascadia Code", "Source Code Pro", monospace;
@@ -84,7 +97,12 @@ body::-webkit-scrollbar { display: none; }
   font-size: 14px;
   font-weight: 500;
   color: #C9C9C9;
-  transition: all 0.3s ease;
+  /* named properties rather than `all`: `all` sweeps up backdrop-filter and
+     box-shadow too, which are expensive and were never meant to tween. */
+  transition: background var(--hover) ease,
+              border-color var(--hover) ease,
+              transform var(--press) var(--ease-out),
+              box-shadow var(--hover) ease;
   backdrop-filter: blur(10px);
   text-decoration: none;
   display: inline-block;
@@ -97,6 +115,13 @@ body::-webkit-scrollbar { display: none; }
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   }
+}
+
+/* the press has to land on pointer-down, not on release: that instant is what
+   makes a control feel connected to your finger. */
+.btn-primary:active {
+  transform: scale(0.97);
+  box-shadow: none;
 }
 
 /* ─── hero scroll indicator ──────────────────────────── */
@@ -578,20 +603,32 @@ body::-webkit-scrollbar { display: none; }
   border-radius: 2px;
   background: rgba(201, 201, 201, 0.28);
   transform-origin: left center;
-  transition: width 0.32s cubic-bezier(0.16, 1, 0.3, 1),
-              background-color 0.32s ease;
+  /* scaleX rather than width. this is the most hovered thing on the page, and
+     width runs layout and paint on every frame of every sweep, where a transform
+     is composited on its own. the ratios below are the old pixel widths: 26/16
+     and 30/16. */
+  transition: transform var(--hover) var(--ease-out),
+              background-color var(--hover) ease;
 }
 
 .showcase-nav-item:hover .showcase-nav-line,
 .showcase-nav-item.is-preview-open .showcase-nav-line,
 .showcase-nav-item:focus-visible .showcase-nav-line {
-  width: 26px;
+  transform: scaleX(1.625);
   background: rgba(255, 255, 255, 0.7);
 }
 
 .showcase-nav-item.is-active .showcase-nav-line {
-  width: 30px;
+  transform: scaleX(1.875);
   background: rgba(255, 255, 255, 0.92);
+}
+
+/* a tick is 2px tall, so scaling it down would be invisible. it answers a press
+   by going fully lit instead, and instantly: asymmetric on purpose, since the
+   press should feel immediate while the release can ease back. */
+.showcase-nav-item:active .showcase-nav-line {
+  background: #ffffff;
+  transition-duration: 60ms;
 }
 
 .showcase-nav-item:focus-visible {
@@ -942,11 +979,18 @@ body::-webkit-scrollbar { display: none; }
   border-radius: 12px;
   color: rgba(255, 255, 255, 0.35);
   cursor: pointer;
-  transition: color 0.35s ease;
+  transition: color var(--hover) ease,
+              transform var(--press) var(--ease-out);
 }
 
 .sound-toggle.is-on {
   color: rgba(255, 255, 255, 0.8);
+}
+
+/* 0.92 rather than the usual 0.97: the icon is 20px, and a 3% squeeze on
+   something that small cannot be seen. */
+.sound-toggle:active {
+  transform: scale(0.92);
 }
 
 .sound-toggle-svg {
@@ -960,12 +1004,13 @@ body::-webkit-scrollbar { display: none; }
   transform: scaleY(var(--bar-scale, 1));
   transform-box: fill-box;
   transform-origin: center;
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform var(--reveal) var(--ease-out);
 }
 
-.sound-toggle-bar:nth-child(2) { transition-delay: 0.03s; }
-.sound-toggle-bar:nth-child(3) { transition-delay: 0.06s; }
-.sound-toggle-bar:nth-child(4) { transition-delay: 0.09s; }
+/* 40ms apart, so the bars read as one gesture rather than four */
+.sound-toggle-bar:nth-child(2) { transition-delay: 0.04s; }
+.sound-toggle-bar:nth-child(3) { transition-delay: 0.08s; }
+.sound-toggle-bar:nth-child(4) { transition-delay: 0.12s; }
 
 /* while nothing can be heard, the bars run a slow grey ripple. a static icon at
    this size is unreadable; movement is what tells you it's a sound control, and
@@ -1003,8 +1048,10 @@ body::-webkit-scrollbar { display: none; }
   opacity: 0;
   transform: translateX(var(--label-shift, -5px));
   pointer-events: none;
-  transition: opacity 0.42s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+  /* a few words appearing next to an icon is tooltip-sized work, so it belongs
+     in the 125 to 200ms band. at 420ms it lagged behind the pointer. */
+  transition: opacity 180ms var(--ease-out),
+              transform 180ms var(--ease-out);
 }
 
 .sound-toggle.is-hinting .sound-toggle-label {
@@ -1053,8 +1100,8 @@ body::-webkit-scrollbar { display: none; }
   /* `backwards`, not `both`: a filled animation keeps its final frame applied
      forever and animations outrank normal rules, which would stop anything else
      from ever touching opacity again. */
-  animation: soundDockIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.5s backwards;
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  animation: soundDockIn 420ms var(--ease-out) 300ms backwards;
+  transition: opacity var(--reveal) ease, transform var(--reveal) ease;
 }
 
 @keyframes soundDockIn {
@@ -1070,7 +1117,15 @@ body::-webkit-scrollbar { display: none; }
   background: #1a1a1a;
   border: 1px solid rgba(201, 201, 201, 0.15);
   color: rgba(201, 201, 201, 0.45);
-  transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+  transition: background var(--hover) ease,
+              border-color var(--hover) ease,
+              color var(--hover) ease,
+              transform var(--press) var(--ease-out);
+}
+
+/* 40px circle, so it can take the standard press squeeze */
+.sound-dock .sound-dock-button:active {
+  transform: scale(0.94);
 }
 
 .sound-dock .sound-dock-button.is-on {
@@ -1126,7 +1181,12 @@ body:has(.chat-modal-overlay) .sound-dock {
   background: transparent;
   border: none;
   cursor: pointer;
-  transition: opacity 0.25s ease;
+  transition: opacity 0.25s ease,
+              transform var(--press) var(--ease-out);
+}
+
+.navbar-toggle:active {
+  transform: scale(0.9);
 }
 
 .navbar-toggle-svg {
@@ -4104,7 +4164,20 @@ body:has(.chat-modal-overlay) .sound-dock {
   background: rgba(201, 201, 201, 0.15);
   border: none;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: background var(--hover) ease,
+              transform var(--press) var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cs-carousel-dot:hover {
+    background: rgba(201, 201, 201, 0.4);
+  }
+}
+
+/* an 8px target needs a bigger squeeze than a button to register at all, and it
+   grows rather than shrinks so the thing under your finger stays visible. */
+.cs-carousel-dot:active {
+  transform: scale(1.35);
 }
 
 .cs-carousel-dot-active {
@@ -4206,8 +4279,15 @@ body:has(.chat-modal-overlay) .sound-dock {
   letter-spacing: 0.05em;
   color: rgba(201, 201, 201, 0.4);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: color var(--hover) ease,
+              background var(--hover) ease,
+              border-color var(--hover) ease,
+              transform var(--press) var(--ease-out);
   white-space: nowrap;
+}
+
+.cs-mobile-pill:active {
+  transform: scale(0.96);
 }
 
 .cs-mobile-pill-active {
@@ -4364,7 +4444,13 @@ body:has(.chat-modal-overlay) .sound-dock {
   color: rgba(255, 255, 255, 0.85);
   cursor: pointer;
   z-index: 2;
-  transition: opacity 0.25s ease, background 0.2s ease, transform 0.2s ease;
+  transition: opacity 0.25s ease,
+              background var(--hover) ease,
+              transform var(--press) var(--ease-out);
+}
+
+.reel-dock-action:active {
+  transform: scale(0.9);
 }
 
 .reel-dock-action:hover {
@@ -4764,4 +4850,65 @@ body:has(.chat-modal-overlay) .sound-dock {
   .reel-modal-esc-hint {
     display: none;
   }
+}
+
+/* ─── reduced motion ────────────────────────────────────
+   the site runs a dozen decorative loops that never stop: a bouncing flag,
+   pulsing arrows, a spinning gradient ring, a breathing status dot. none of them
+   carry information, and continuous motion is exactly what someone who asked the
+   os to calm interfaces down is asking to be spared.
+
+   this is not a blanket kill switch. reduced motion means fewer and gentler
+   animations, not none, so the fades and colour changes that explain what just
+   happened all stay: only the endless loops and the position changes go. */
+
+@media (prefers-reduced-motion: reduce) {
+  .flag-bounce,
+  .hero-scroll-indicator,
+  .hero-scroll-arrow-1,
+  .hero-scroll-arrow-2,
+  .hero-scroll-arrow-3,
+  .showcase-click-cursor.visible,
+  .chat-bubble-pulse,
+  .chat-bubble::before,
+  .chat-modal-status-dot,
+  .chat-modal-input-wrapper.typing::before,
+  .city-modal-dragme.visible {
+    animation: none;
+  }
+
+  /* the shimmer travels a gradient across text, so it reads as movement even
+     though nothing changes position. hold it still and keep the colour. */
+  .chat-bubble-label,
+  .chat-modal-placeholder-shimmer,
+  .shimmer-city {
+    animation: none;
+    background-position: 0 0;
+  }
+
+  /* a press still needs to answer, it just answers without travel */
+  .btn-primary:active,
+  .cs-mobile-pill:active,
+  .navbar-toggle:active,
+  .reel-dock-action:active,
+  .sound-toggle:active,
+  .sound-dock .sound-dock-button:active,
+  .cs-carousel-dot:active {
+    transform: none;
+    opacity: 0.65;
+  }
+
+  /* entrances still arrive, they just arrive by fading. keeping each one's own
+     duration and delay preserves the staged reveal, so the page still explains
+     itself in the same order, without anything scaling, sliding or blurring. */
+  .hero-section,
+  .hero-image-wrap,
+  .sound-dock {
+    animation-name: reducedFadeIn;
+  }
+}
+
+@keyframes reducedFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }

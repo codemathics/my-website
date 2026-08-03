@@ -23,7 +23,6 @@ function ImageCarousel({ images }: { images: string[] }) {
     const track = trackRef.current;
     if (!track) return;
     isScrollingRef.current = true;
-    sound.select();
     activeRef.current = idx;
     setActive(idx);
     const slide = track.children[idx] as HTMLElement;
@@ -97,6 +96,8 @@ function ImageCarousel({ images }: { images: string[] }) {
               key={i}
               className={`cs-carousel-dot ${i === active ? "cs-carousel-dot-active" : ""}`}
               onClick={() => scrollTo(i)}
+              /* answer the press, not the release */
+              onPointerDown={() => { if (i !== active) sound.select(); }}
               aria-label={`go to image ${i + 1}`}
             />
           ))}
