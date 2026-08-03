@@ -74,7 +74,12 @@ Feel natural because they simulate physics; no fixed duration — they settle on
 
 Keep bounce subtle (0.1–0.3); avoid bounce in most UI — reserve for drag-to-dismiss and playful interactions. Springs maintain velocity when interrupted (keyframes restart from zero), so they're ideal for gestures users may reverse mid-motion.
 
-Mouse interactions: interpolate with `useSpring` rather than tying the value directly to mouse position (direct = artificial, no momentum). Feed it a `MotionValue` so it re-targets as the source changes — a plain number only seeds the initial value. Only do this when the motion is decorative.
+Mouse interactions: interpolate with `useSpring` rather than tying the value directly to mouse position (direct = artificial, no momentum). Wire it up one of two ways — a plain number passed to `useSpring` only *seeds* a standalone spring, so on its own it never follows the mouse:
+
+- **Changing source** → pass a `MotionValue`; the spring subscribes and re-targets whenever the source changes.
+- **Standalone spring** → keep the returned value and call `.set(next)` to re-target it as the mouse moves.
+
+Only do this when the motion is decorative.
 
 ## Interruptibility
 

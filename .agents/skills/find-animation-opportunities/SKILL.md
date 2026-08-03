@@ -76,7 +76,7 @@ Sweep for these seams — each is a known class of genuine opportunity:
 
 **Teleporting state**
 - Content that swaps, appears, or vanishes instantly (conditional renders, route content, expanding sections) → fade/scale entrances from `scale(0.95–0.97)` + `opacity: 0`, `ease-out`, never `scale(0)`; `@starting-style` for entry without JS
-- Accordions/collapses that snap open → height + opacity transition (a documented exception to the transform/opacity preference — height animates layout every frame, so keep the panel modest and profile it)
+- Accordions/collapses that snap open → height + opacity transition (a documented exception to the transform/opacity preference — height animates layout every frame, so keep the panel modest and profile it). Say which height technique the suggestion assumes: `height: 0` → `auto` needs `interpolate-size: allow-keywords` and is progressive enhancement, so pair it with a measured numeric height (from `scrollHeight`, applied as an inline custom property) for browsers without it, or use a `grid-template-rows: 0fr → 1fr` wrapper instead
 - List items added/removed with no bridge (and the list isn't high-frequency) → enter/exit transitions; CSS transitions, not keyframes, so rapid triggers retarget smoothly
 
 **Missing spatial story**

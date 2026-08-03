@@ -444,7 +444,7 @@ Start with `clip-path: inset(0 0 100% 0)` (hidden from bottom). Animate to `inse
 
 ### Comparison sliders
 
-Overlay two images. Clip the top one with `clip-path: inset(0 50% 0 0)`. Adjust the right inset value based on drag position. No extra DOM elements needed. `clip-path` repaints rather than compositing, so acceleration here is conditional — it is cheap on a modest image and worth profiling on a large one or a slow device.
+Overlay two images. Clip the top one with `clip-path: inset(0 50% 0 0)`. Adjust the right inset value based on drag position. No extra DOM elements needed. `clip-path` repaints rather than compositing, and how much a given browser accelerates it is implementation-dependent, so treat the cost as conditional: cheap on a modest image, worth profiling in your target browsers on a large one or a slow device.
 
 ## Gesture and Drag Interactions
 

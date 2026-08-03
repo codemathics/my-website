@@ -85,23 +85,35 @@ Apple deliberately replaced the physics triplet (mass/stiffness/damping) with tw
 | Rotation | `0.8` | `0.4` |
 | Drawer / sheet | `0.8` | `0.3` |
 
-**Web mapping (Motion / Framer Motion):** the `bounce` + `duration` spring API maps closely to Apple's damping + response. A safe house style is `damping: 1.0` springs everywhere by default; reserve bounce for momentum-driven, physical interactions.
+**Web mapping (Motion / Framer Motion):** the `bounce` + `duration` spring API maps closely to Apple's damping + response, and is the easier of the two to reason about. It comes with one hard limitation: **duration-based springs ignore velocity.** Motion only honours an initial velocity on *physics-based* springs defined with `stiffness`/`damping`/`mass` — supply `duration`/`bounce` instead and any inherited or passed velocity is discarded (deliberately, so an interrupted small-range animation can't oscillate wildly).
+
+So pick by whether a gesture preceded the animation:
 
 ```js
 import { animate } from 'motion';
 
-// Critically damped default (no overshoot)
+// No gesture to inherit from — duration-based is fine, and easier to tune.
+// Critically damped default (no overshoot).
 animate(el, { y: 0 }, { type: 'spring', bounce: 0, duration: 0.4 });
 
-// Momentum interaction — a little bounce, only because a flick preceded it
-animate(el, { y: target }, { type: 'spring', bounce: 0.2, duration: 0.4 });
+// Momentum interaction after a flick — must be physics-based, or the release
+// velocity is thrown away and the seam in §5 reappears.
+animate(el, { y: target }, {
+  type: 'spring',
+  stiffness: 400,
+  damping: 40,      // ≈ critically damped at this stiffness; lower it for overshoot
+  velocity: releaseVelocity,
+});
 ```
 
 ## 5. Velocity handoff — the seam between drag and animation
 
 When a gesture ends, the animation must **continue at the finger's exact velocity**, so there's no visible seam between dragging and animating. This is the detail that most separates "fluid" from "fine."
 
-Pass the pointer's release velocity as the spring's initial velocity. **Framer Motion / Motion take absolute px/s velocity directly** (the `velocity` option), so you usually hand them the raw release value and stop there.
+Pass the pointer's release velocity as the spring's initial velocity. Two prerequisites:
+
+1. **The spring must be physics-based.** As §4 notes, a `duration`/`bounce` spring discards velocity outright, so a handoff into one silently does nothing. Define `stiffness`/`damping`/`mass` for any animation that continues a gesture.
+2. **Match the units the API expects.** Motion's `velocity` option takes **absolute px/s**, so hand it the raw release value and stop there.
 
 Only normalize when the spring API asks for **relative** velocity — velocity expressed in fractions of the remaining distance per second. Guard the division: when the element is already at its target the remaining distance is zero, and a nearly-arrived element produces an explosive normalized value.
 
@@ -116,7 +128,7 @@ const relativeVelocity =
   Math.abs(remaining) < EPSILON ? 0 : gestureVelocity / remaining;
 ```
 
-Example: element at `y=50`, target `y=150` (100px to go), finger moving 50px/s → initial spring velocity = `50 / 100 = 0.5`.
+Example: element at `y=50`, target `y=150` (100px to go), finger moving 50px/s → **relative** velocity = `50 / 100 = 0.5`. That `0.5` is only for APIs that want the normalized form; Motion would want the raw `50` here.
 
 ## 6. Momentum projection — animate to where the gesture is *going*
 
@@ -278,8 +290,8 @@ Tactical rules that serve these:
 | Need | Technique | Concrete value |
 | --- | --- | --- |
 | Default UI spring | Critically damped, no overshoot | `damping 1.0`, `response 0.3–0.4` |
-| Momentum / flick spring | Under-damped, slight bounce | `damping ~0.8`, `response 0.3–0.4` |
-| Gesture → spring velocity | Hand off release velocity | `gestureVelocity / (target − current)` if normalized |
+| Momentum / flick spring | Under-damped, slight bounce — must be physics-based | `damping ~0.8`, `response 0.3–0.4`; in Motion use `stiffness`/`damping`/`mass`, never `duration`/`bounce` |
+| Gesture → spring velocity | Hand off release velocity | raw px/s for Motion's `velocity`; `gestureVelocity / (target − current)` only if the API wants it normalized |
 | Flick landing point | Project momentum | `current + (v/1000)·d/(1−d)`, `d ≈ 0.998` |
 | Interrupt cleanly | Start from presentation (live) value | read the on-screen transform |
 | Avoid reversal "brick wall" | Carry velocity through re-target | spring that blends velocity |

@@ -19,7 +19,7 @@ The rule catalog with precise values lives in [AUDIT.md](AUDIT.md). The plan for
 
 ## Hard Rules
 
-1. **The audit and planning workflow never modifies source code.** The only files it creates or edits live under `plans/` (or `animation-plans/` if `plans/` already exists for something else). If asked to "just fix it", decline and point to `improve-animations execute <plan>` or to running the plan with any agent.
+1. **The audit and planning workflow never modifies source code.** The only files it creates or edits live under the **plan directory**: `plans/`, or `animation-plans/` if `plans/` already exists for something else. Choose it once during recon and use that same directory for every plan file and for the README — never split them across both. If asked to "just fix it", decline and point to `improve-animations execute <plan>` or to running the plan with any agent.
 2. **No mutating operations while auditing.** No installs, no builds with side effects, no commits, no formatters. Read-only analysis only.
 3. **Only the delegated executor may change source.** The `execute <plan>` variant is a separate workflow: it dispatches an executor subagent that works in its own isolated worktree, and that subagent is the only thing permitted to modify source files. The auditing agent never edits source in the current worktree, before or after dispatching an executor — it reads the executor's diff and renders a verdict. Rules 1 and 2 constrain the auditor; they do not constrain the executor inside its worktree.
 4. **Plans must be fully self-contained.** The executor has zero context from this conversation and zero taste. Never write "use the easing discussed above" — inline the exact cubic-bezier, the exact duration, the exact file path and code excerpt.
@@ -80,11 +80,11 @@ Then **stop and wait for the user to select** which findings become plans. If ru
 
 ### Phase 4 — Write plans
 
-One plan per selected finding, using [PLAN-TEMPLATE.md](PLAN-TEMPLATE.md), written into `plans/` as `NNN-short-slug.md` (monotonic numbering; respect existing plans). Stamp each plan with the current commit (`git rev-parse --short HEAD`).
+One plan per selected finding, using [PLAN-TEMPLATE.md](PLAN-TEMPLATE.md), written into the plan directory chosen in Hard Rule 1 as `NNN-short-slug.md` (monotonic numbering; respect existing plans). Stamp each plan with the current commit (`git rev-parse --short HEAD`).
 
 Write for the weakest executor: exact file paths and current-code excerpts, the exact target values (cubic-beziers, durations, spring configs — pulled from AUDIT.md, never approximated), the repo's own conventions with an exemplar, ordered steps, hard scope boundaries, and a verification section including how to *feel-check* the result (slow motion, frame-by-frame, real device for gestures).
 
-Finish by creating or updating `plans/README.md`: recommended execution order, dependencies between plans, and a status column.
+Finish by creating or updating `README.md` **in that same plan directory**: recommended execution order, dependencies between plans, and a status column.
 
 ## Invocation Variants
 
@@ -95,7 +95,7 @@ Finish by creating or updating `plans/README.md`: recommended execution order, d
 | a category focus (`performance`, `accessibility`, `easing`…) | Recon + audit that category only |
 | `plan <description>` | Skip the audit; recon just enough to specify, then write a single plan for the described improvement |
 | `execute <plan>` | Dispatch an executor subagent to implement the plan in an isolated worktree — the executor is the only agent that writes source (Hard Rule 3) — then review its diff with the `review-animations` bar and render a verdict |
-| `reconcile` | Re-check `plans/` against the current code: mark done plans DONE, refresh stale file:line references, retire fixed findings |
+| `reconcile` | Re-check the plan directory against the current code: mark done plans DONE, refresh stale file:line references, retire fixed findings |
 
 ## Tone
 
