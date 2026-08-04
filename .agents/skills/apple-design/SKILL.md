@@ -87,6 +87,8 @@ Apple deliberately replaced the physics triplet (mass/stiffness/damping) with tw
 
 **Web mapping (Motion / Framer Motion):** the `bounce` + `duration` spring API maps closely to Apple's damping + response, and is the easier of the two to reason about. It comes with one hard limitation: **duration-based springs ignore velocity.** Motion only honours an initial velocity on *physics-based* springs defined with `stiffness`/`damping`/`mass` — supply `duration`/`bounce` instead and any inherited or passed velocity is discarded (deliberately, so an interrupted small-range animation can't oscillate wildly).
 
+Mind the vocabulary clash: Apple's **damping ratio** above is dimensionless (`1.0` = critically damped), while Motion's `damping` is a force coefficient whose default is `10`. They are not the same number. To get Apple's ratio `r` out of Motion, set `damping = 2r·√(stiffness·mass)` — at `stiffness: 400, mass: 1` that makes `damping: 40` the critically damped `r = 1.0`, and `damping: 32` Apple's bouncier `r = 0.8`.
+
 So pick by whether a gesture preceded the animation:
 
 ```js
@@ -101,7 +103,7 @@ animate(el, { y: 0 }, { type: 'spring', bounce: 0, duration: 0.4 });
 animate(el, { y: target }, {
   type: 'spring',
   stiffness: 400,
-  damping: 40,      // ≈ critically damped at this stiffness; lower it for overshoot
+  damping: 40,      // critically damped at this stiffness/mass; drop to 32 for Apple's 0.8 ratio
   velocity: releaseVelocity,
 });
 ```
@@ -113,7 +115,7 @@ When a gesture ends, the animation must **continue at the finger's exact velocit
 Pass the pointer's release velocity as the spring's initial velocity. Two prerequisites:
 
 1. **The spring must be physics-based.** As §4 notes, a `duration`/`bounce` spring discards velocity outright, so a handoff into one silently does nothing. Define `stiffness`/`damping`/`mass` for any animation that continues a gesture.
-2. **Match the units the API expects.** Motion's `velocity` option takes **absolute px/s**, so hand it the raw release value and stop there.
+2. **Match the units the API expects.** Motion's `velocity` is in the animated property's own units per second — px/s for positional values like `x`/`y`, but deg/s for `rotate` and units-of-scale/s for `scale`. For a drag you are handing over a positional px/s value, so pass the raw release velocity and stop there.
 
 Only normalize when the spring API asks for **relative** velocity — velocity expressed in fractions of the remaining distance per second. Guard the division: when the element is already at its target the remaining distance is zero, and a nearly-arrived element produces an explosive normalized value.
 
@@ -291,7 +293,7 @@ Tactical rules that serve these:
 | --- | --- | --- |
 | Default UI spring | Critically damped, no overshoot | `damping 1.0`, `response 0.3–0.4` |
 | Momentum / flick spring | Under-damped, slight bounce — must be physics-based | `damping ~0.8`, `response 0.3–0.4`; in Motion use `stiffness`/`damping`/`mass`, never `duration`/`bounce` |
-| Gesture → spring velocity | Hand off release velocity | raw px/s for Motion's `velocity`; `gestureVelocity / (target − current)` only if the API wants it normalized |
+| Gesture → spring velocity | Hand off release velocity | Motion's `velocity` uses the property's units/s (px/s for `x`/`y`, deg/s for `rotate`); `gestureVelocity / (target − current)` only if the API wants it normalized |
 | Flick landing point | Project momentum | `current + (v/1000)·d/(1−d)`, `d ≈ 0.998` |
 | Interrupt cleanly | Start from presentation (live) value | read the on-screen transform |
 | Avoid reversal "brick wall" | Carry velocity through re-target | spring that blends velocity |
