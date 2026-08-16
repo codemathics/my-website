@@ -37,6 +37,23 @@ const nextConfig: NextConfig = {
     return config;
   },
 
+  async rewrites() {
+    // morphyn is a vite spa sitting in public/experiments/morphyn. the
+    // experiments/[slug] route would 404 these paths (dynamicParams is
+    // false), so they have to win before the app router does.
+    const morphyn = '/experiments/morphyn/index.html'
+    return {
+      beforeFiles: [
+        { source: '/experiments/morphyn', destination: morphyn },
+        { source: '/experiments/morphyn/', destination: morphyn },
+        { source: '/experiments/morphyn/studio', destination: morphyn },
+        { source: '/experiments/morphyn/studio/', destination: morphyn },
+        { source: '/experiments/morphyn/render', destination: morphyn },
+        { source: '/experiments/morphyn/render/', destination: morphyn },
+      ],
+    }
+  },
+
   async redirects() {
     return [
       {
