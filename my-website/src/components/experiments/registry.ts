@@ -8,6 +8,8 @@ import type { ExperimentMeta } from "./shared";
 
 import MagneticDock from "./day-01-magnetic-dock/MagneticDock";
 import { meta as magneticDock } from "./day-01-magnetic-dock/meta";
+import MorphynCard from "./morphyn/MorphynCard";
+import { meta as morphyn } from "./morphyn/meta";
 
 export interface Experiment {
   meta: ExperimentMeta;
@@ -17,17 +19,21 @@ export interface Experiment {
 // ordered by day; the grid renders this reversed so the newest shows first.
 export const experiments: Experiment[] = [
   { meta: magneticDock, Component: MagneticDock },
+  { meta: morphyn, Component: MorphynCard },
 ];
 
+/** experiments that own an /experiments/[slug] detail page. */
+export const detailExperiments = experiments.filter((e) => !e.meta.href);
+
 export function getExperiment(slug: string): Experiment | undefined {
-  return experiments.find((e) => e.meta.slug === slug);
+  return detailExperiments.find((e) => e.meta.slug === slug);
 }
 
 export function getAdjacent(slug: string) {
-  const i = experiments.findIndex((e) => e.meta.slug === slug);
+  const i = detailExperiments.findIndex((e) => e.meta.slug === slug);
   return {
-    prev: i > 0 ? experiments[i - 1] : undefined,
-    next: i < experiments.length - 1 ? experiments[i + 1] : undefined,
+    prev: i > 0 ? detailExperiments[i - 1] : undefined,
+    next: i > -1 && i < detailExperiments.length - 1 ? detailExperiments[i + 1] : undefined,
   };
 }
 
