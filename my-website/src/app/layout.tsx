@@ -3,6 +3,9 @@ import ChatAgent from "@/components/ChatAgent";
 import VideoReel from "@/components/VideoReel";
 import ClarityScript from "@/components/ClarityScript";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
+import SoundEffects from "@/components/SoundEffects";
+import SoundDock from "@/components/SoundDock";
+import AgentationToolbar from "@/components/AgentationToolbar";
 import "./globals.css";
 
 const siteUrl =
@@ -57,10 +60,13 @@ export default function RootLayout({
         className="antialiased"
       >
         {children}
+        <SoundEffects />
         <VideoReel />
         <ChatAgent />
+        <SoundDock />
         <ClarityScript />
         <GoogleAnalytics />
+        <AgentationToolbar />
       </body>
     </html>
   );

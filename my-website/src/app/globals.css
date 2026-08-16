@@ -19,6 +19,23 @@
 :root {
   --background: #010101;
   --foreground: #C9C9C9;
+
+  /* ── motion ──
+     the curve this site already uses everywhere, named. built-in css easings are
+     too weak to read as deliberate, so entering and exiting motion gets the
+     strong ease-out; things moving on screen get the ease-in-out. durations are
+     the ceilings, not targets: ui motion above ~300ms starts to feel like it is
+     waiting on you, and a press has to answer immediately or the whole interface
+     stops feeling direct.
+
+     prefixed `motion-` because tailwind already defines --ease-out and
+     --ease-in-out as theme tokens: an unprefixed name here would quietly
+     retarget every tailwind easing utility on the site. */
+  --motion-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-press: 120ms;
+  --motion-hover: 200ms;
+  --motion-reveal: 260ms;
   /* system font fallbacks (no network fetch) */
   --font-geist-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-geist-mono: ui-monospace, "Cascadia Code", "Source Code Pro", monospace;
@@ -84,7 +101,12 @@ body::-webkit-scrollbar { display: none; }
   font-size: 14px;
   font-weight: 500;
   color: #C9C9C9;
-  transition: all 0.3s ease;
+  /* named properties rather than `all`: `all` sweeps up backdrop-filter and
+     box-shadow too, which are expensive and were never meant to tween. */
+  transition: background var(--motion-hover) ease,
+              border-color var(--motion-hover) ease,
+              transform var(--motion-press) var(--motion-ease-out),
+              box-shadow var(--motion-hover) ease;
   backdrop-filter: blur(10px);
   text-decoration: none;
   display: inline-block;
@@ -97,6 +119,13 @@ body::-webkit-scrollbar { display: none; }
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   }
+}
+
+/* the press has to land on pointer-down, not on release: that instant is what
+   makes a control feel connected to your finger. */
+.btn-primary:active {
+  transform: scale(0.97);
+  box-shadow: none;
 }
 
 /* ─── hero scroll indicator ──────────────────────────── */
@@ -488,7 +517,7 @@ body::-webkit-scrollbar { display: none; }
 
 /* ── left-side jump navigator (notion-style minimap) ── */
 
-.showcase-nav {
+.showcase-nav-column {
   position: absolute;
   /* roughly aligned with the top logo + project title column, nudged a touch
      right so the ticks sit just inside that edge. */
@@ -496,17 +525,54 @@ body::-webkit-scrollbar { display: none; }
   top: 50%;
   transform: translateY(-50%);
   z-index: 6;
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-  padding: 6px 0;
   /* fades in with the panel */
   opacity: 0;
   transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.35s;
 }
 
-.project-showcase-sticky.panel-revealed .showcase-nav {
+.project-showcase-sticky.panel-revealed .showcase-nav-column {
   opacity: 1;
+}
+
+/* heads the rail without displacing it: floating the control above the column
+   keeps the ticks themselves centred on the viewport, and leaves it in place on
+   short viewports where the ticks are hidden. */
+/* scoped to the column so these beat the navbar's base .sound-toggle rules,
+   which come later in the file. */
+.showcase-nav-column .showcase-nav-sound {
+  position: absolute;
+  bottom: 100%;
+  /* cancels the svg's own leading gutter so the bars start on the same edge as
+     the ticks below them. */
+  left: -2px;
+  margin-bottom: 12px;
+  height: 20px;
+  padding: 0;
+  /* at rest it reads as one more tick in the rail; lit when sound is on. */
+  color: rgba(201, 201, 201, 0.3);
+}
+
+.showcase-nav-column .showcase-nav-sound.is-on {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* the label clears the ticks and lands on the same left edge as the preview
+   cards that fly out lower down the rail. */
+.showcase-nav-column .sound-toggle-label {
+  margin-left: 16px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .showcase-nav-column .showcase-nav-sound:hover {
+    color: rgba(255, 255, 255, 0.9);
+  }
+}
+
+.showcase-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 6px 0;
 }
 
 .showcase-nav-item {
@@ -541,20 +607,32 @@ body::-webkit-scrollbar { display: none; }
   border-radius: 2px;
   background: rgba(201, 201, 201, 0.28);
   transform-origin: left center;
-  transition: width 0.32s cubic-bezier(0.16, 1, 0.3, 1),
-              background-color 0.32s ease;
+  /* scaleX rather than width. this is the most hovered thing on the page, and
+     width runs layout and paint on every frame of every sweep, where a transform
+     is composited on its own. the ratios below are the old pixel widths: 26/16
+     and 30/16. */
+  transition: transform var(--motion-hover) var(--motion-ease-out),
+              background-color var(--motion-hover) ease;
 }
 
 .showcase-nav-item:hover .showcase-nav-line,
 .showcase-nav-item.is-preview-open .showcase-nav-line,
 .showcase-nav-item:focus-visible .showcase-nav-line {
-  width: 26px;
+  transform: scaleX(1.625);
   background: rgba(255, 255, 255, 0.7);
 }
 
 .showcase-nav-item.is-active .showcase-nav-line {
-  width: 30px;
+  transform: scaleX(1.875);
   background: rgba(255, 255, 255, 0.92);
+}
+
+/* a tick is 2px tall, so scaling it down would be invisible. it answers a press
+   by going fully lit instead, and instantly: asymmetric on purpose, since the
+   press should feel immediate while the release can ease back. */
+.showcase-nav-item:active .showcase-nav-line {
+  background: #ffffff;
+  transition-duration: 60ms;
 }
 
 .showcase-nav-item:focus-visible {
@@ -737,8 +815,16 @@ body::-webkit-scrollbar { display: none; }
 .showcase-mockup-link {
   display: block;
   text-decoration: none;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.3s ease,
+              transform var(--motion-press) var(--motion-ease-out);
   cursor: pointer;
+}
+
+/* the primary thing to click on the home page, and it answered hover but not
+   press. 0.99 because the surface is huge: the same 3% that reads as a squeeze
+   on a button reads as the whole layout lurching here. */
+.showcase-mockup-link:active {
+  transform: scale(0.99);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -873,12 +959,19 @@ body::-webkit-scrollbar { display: none; }
   align-items: center;
   justify-content: center;
   border-radius: 12px;
-  transition: color 0.25s ease;
+  transition: color 0.25s ease,
+              opacity var(--motion-press) var(--motion-ease-out);
   position: relative;
 }
 
 .nav-link:hover {
   color: rgba(255, 255, 255, 0.8);
+}
+
+/* a text link gets a dim rather than a squeeze: scaling type is distracting, and
+   nav is used often enough that the feedback should be near-imperceptible. */
+.nav-link:active {
+  opacity: 0.55;
 }
 
 .nav-link.active {
@@ -895,6 +988,211 @@ body::-webkit-scrollbar { display: none; }
   user-select: none;
 }
 
+/* ── ui sound toggle ── */
+
+.sound-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 8px;
+  background: transparent;
+  border: none;
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.35);
+  cursor: pointer;
+  transition: color var(--motion-hover) ease,
+              transform var(--motion-press) var(--motion-ease-out);
+}
+
+.sound-toggle.is-on {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* 0.92 rather than the usual 0.97: the icon is 20px, and a 3% squeeze on
+   something that small cannot be seen. */
+.sound-toggle:active {
+  transform: scale(0.92);
+}
+
+.sound-toggle-svg {
+  display: block;
+  overflow: visible;
+}
+
+/* geometry stays put; only the scale animates, so the bars grow out of their
+   own centre line rather than jumping. */
+.sound-toggle-bar {
+  transform: scaleY(var(--bar-scale, 1));
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform var(--motion-reveal) var(--motion-ease-out);
+}
+
+/* 40ms apart, so the bars read as one gesture rather than four */
+.sound-toggle-bar:nth-child(2) { transition-delay: 0.04s; }
+.sound-toggle-bar:nth-child(3) { transition-delay: 0.08s; }
+.sound-toggle-bar:nth-child(4) { transition-delay: 0.12s; }
+
+/* while nothing can be heard, the bars run a slow grey ripple. a static icon at
+   this size is unreadable; movement is what tells you it's a sound control, and
+   staying grey is what tells you it isn't running yet. keyframes outrank the
+   inline scale, so the wave takes over and hands back on its own. */
+@keyframes soundWaveIdle {
+  0%, 100% { transform: scaleY(0.16); }
+  45%      { transform: scaleY(0.78); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sound-toggle.is-idle .sound-toggle-bar {
+    animation: soundWaveIdle 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* staggered so the crest travels across the bars instead of pumping */
+  .sound-toggle.is-idle .sound-toggle-bar:nth-child(2) { animation-delay: 0.13s; }
+  .sound-toggle.is-idle .sound-toggle-bar:nth-child(3) { animation-delay: 0.26s; }
+  .sound-toggle.is-idle .sound-toggle-bar:nth-child(4) { animation-delay: 0.39s; }
+}
+
+/* `--label-shift` lets a placement flip which side the wording slides out of,
+   so a control pinned to the right edge doesn't push it off screen. */
+.sound-toggle-label {
+  position: absolute;
+  left: 100%;
+  margin-left: 11px;
+  font-family: 'Helvetica Now Display', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(232, 232, 232, 0.75);
+  opacity: 0;
+  transform: translateX(var(--label-shift, -5px));
+  pointer-events: none;
+  /* a few words appearing next to an icon is tooltip-sized work, so it belongs
+     in the 125 to 200ms band. at 420ms it lagged behind the pointer. */
+  transition: opacity 180ms var(--motion-ease-out),
+              transform 180ms var(--motion-ease-out);
+}
+
+.sound-toggle.is-hinting .sound-toggle-label {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .sound-toggle:hover {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .sound-toggle:hover .sound-toggle-label {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.sound-toggle:focus-visible {
+  outline: 1px solid rgba(255, 255, 255, 0.35);
+  outline-offset: 2px;
+}
+
+.sound-toggle:focus-visible .sound-toggle-label {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* labelled variant inside the mobile menu */
+.sound-toggle-row {
+  width: 100%;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+}
+
+/* ── floating sound dock (everywhere the project rail isn't) ── */
+
+/* rides directly above the chat bubble and shares its shape, so the two read as
+   a pair of ambient controls rather than one stray button. */
+.sound-dock {
+  position: fixed;
+  right: 34px;
+  bottom: 92px;
+  z-index: 1000;
+  /* `backwards`, not `both`: a filled animation keeps its final frame applied
+     forever and animations outrank normal rules, which would stop anything else
+     from ever touching opacity again. */
+  animation: soundDockIn 420ms var(--motion-ease-out) 300ms backwards;
+  transition: opacity var(--motion-reveal) ease, transform var(--motion-reveal) ease;
+}
+
+@keyframes soundDockIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.9); }
+  to   { opacity: 1; transform: none; }
+}
+
+.sound-dock .sound-dock-button {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  background: #1a1a1a;
+  border: 1px solid rgba(201, 201, 201, 0.15);
+  color: rgba(201, 201, 201, 0.45);
+  transition: background var(--motion-hover) ease,
+              border-color var(--motion-hover) ease,
+              color var(--motion-hover) ease,
+              transform var(--motion-press) var(--motion-ease-out);
+}
+
+/* 40px circle, so it can take the standard press squeeze */
+.sound-dock .sound-dock-button:active {
+  transform: scale(0.94);
+}
+
+.sound-dock .sound-dock-button.is-on {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* pinned to the right edge, so the wording comes out of the left side */
+.sound-dock .sound-toggle-label {
+  --label-shift: 6px;
+  left: auto;
+  right: 100%;
+  margin-left: 0;
+  margin-right: 12px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .sound-dock .sound-dock-button:hover {
+    background: #1e1e1e;
+    border-color: rgba(201, 201, 201, 0.28);
+    color: rgba(255, 255, 255, 0.95);
+  }
+}
+
+/* the chat modal takes the whole screen — nothing should float over it */
+body:has(.chat-modal-overlay) .sound-dock {
+  opacity: 0;
+  transform: scale(0.6);
+  pointer-events: none;
+}
+
+/* phones keep the bottom-right corner for the chat bubble alone; the menu row
+   is the control at that size. */
+@media (max-width: 768px) {
+  .sound-dock {
+    display: none;
+  }
+}
+
+@media (min-width: 769px) {
+  .navbar-dropdown .sound-toggle-row {
+    display: none;
+  }
+}
+
 /* nav menu icon — hidden on desktop */
 .navbar-toggle {
   display: none;
@@ -906,7 +1204,12 @@ body::-webkit-scrollbar { display: none; }
   background: transparent;
   border: none;
   cursor: pointer;
-  transition: opacity 0.25s ease;
+  transition: opacity 0.25s ease,
+              transform var(--motion-press) var(--motion-ease-out);
+}
+
+.navbar-toggle:active {
+  transform: scale(0.9);
 }
 
 .navbar-toggle-svg {
@@ -1001,6 +1304,11 @@ body::-webkit-scrollbar { display: none; }
 .navbar-dropdown-close:hover {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.4);
+}
+
+.navbar-dropdown-close:active {
+  transform: scale(0.92);
+  transition-duration: var(--motion-press);
 }
 
 .navbar-dropdown-inner {
@@ -1289,7 +1597,7 @@ body::-webkit-scrollbar { display: none; }
 
   /* keep the nav ticks ~16px inside the column, mirroring desktop (logo 40 /
      nav 56) at this scale (logo 24 / nav 40). */
-  .showcase-nav {
+  .showcase-nav-column {
     left: 40px;
   }
 
@@ -1876,7 +2184,10 @@ body::-webkit-scrollbar { display: none; }
   z-index: 9999;
   opacity: 0;
   transform: scale(0.8);
-  transition: all 0.3s ease;
+  transition: opacity 0.3s ease,
+              transform 0.3s ease,
+              background var(--motion-hover) ease,
+              border-color var(--motion-hover) ease;
   transition-delay: 0.35s;
   pointer-events: auto;
 }
@@ -1890,7 +2201,8 @@ body::-webkit-scrollbar { display: none; }
 .chat-modal-close.closing {
   opacity: 0;
   transform: scale(0.8);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.4s var(--motion-ease-in-out),
+              transform 0.4s var(--motion-ease-in-out);
   transition-delay: 0s;
 }
 
@@ -1898,6 +2210,13 @@ body::-webkit-scrollbar { display: none; }
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.4);
   transition-delay: 0s;
+}
+
+/* a 48px circle takes the standard squeeze; the press duration is set here so
+   it stays quick even though the entry is a deliberate 300ms */
+.chat-modal-close:active {
+  transform: scale(0.92);
+  transition-duration: var(--motion-press);
 }
 
 /* content container */
@@ -3163,7 +3482,10 @@ body::-webkit-scrollbar { display: none; }
   z-index: 9999;
   opacity: 0;
   transform: scale(0.8);
-  transition: all 0.3s ease;
+  transition: opacity 0.3s ease,
+              transform 0.3s ease,
+              background var(--motion-hover) ease,
+              border-color var(--motion-hover) ease;
   pointer-events: auto;
 }
 
@@ -3175,6 +3497,11 @@ body::-webkit-scrollbar { display: none; }
 .book-modal-close:hover {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.4);
+}
+
+.book-modal-close:active {
+  transform: scale(0.92);
+  transition-duration: var(--motion-press);
 }
 
 .book-modal-content {
@@ -3347,6 +3674,11 @@ body::-webkit-scrollbar { display: none; }
 
 .cs-wip-overlay-close:hover {
   color: rgba(201, 201, 201, 0.9);
+}
+
+.cs-wip-overlay-close:active {
+  transform: scale(0.92);
+  transition-duration: var(--motion-press);
 }
 
 /* ── hero ── */
@@ -3589,7 +3921,10 @@ body::-webkit-scrollbar { display: none; }
   letter-spacing: 0.04em;
   color: rgba(201, 201, 201, 0.6);
   text-decoration: none;
-  transition: all 0.25s ease;
+  transition: color var(--motion-hover) ease,
+              border-color var(--motion-hover) ease,
+              background var(--motion-hover) ease,
+              transform var(--motion-press) var(--motion-ease-out);
   margin-top: 12px;
 }
 
@@ -3597,6 +3932,11 @@ body::-webkit-scrollbar { display: none; }
   border-color: rgba(201, 201, 201, 0.35);
   color: #c9c9c9;
   background: rgba(255, 255, 255, 0.03);
+}
+
+.cs-sidebar-next:active {
+  transform: scale(0.97);
+  transition-duration: var(--motion-press);
 }
 
 /* ── content column ── */
@@ -3884,7 +4224,20 @@ body::-webkit-scrollbar { display: none; }
   background: rgba(201, 201, 201, 0.15);
   border: none;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: background var(--motion-hover) ease,
+              transform var(--motion-press) var(--motion-ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cs-carousel-dot:hover {
+    background: rgba(201, 201, 201, 0.4);
+  }
+}
+
+/* an 8px target needs a bigger squeeze than a button to register at all, and it
+   grows rather than shrinks so the thing under your finger stays visible. */
+.cs-carousel-dot:active {
+  transform: scale(1.35);
 }
 
 .cs-carousel-dot-active {
@@ -3932,7 +4285,10 @@ body::-webkit-scrollbar { display: none; }
   text-decoration: none;
   color: rgba(201, 201, 201, 0.6);
   font-size: 13px;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: color var(--motion-hover) ease,
+              border-color var(--motion-hover) ease,
+              background var(--motion-hover) ease,
+              transform var(--motion-press) var(--motion-ease-out);
 }
 
 .cs-next-project-link:hover {
@@ -3940,6 +4296,11 @@ body::-webkit-scrollbar { display: none; }
   color: #fff;
   background: rgba(255, 255, 255, 0.03);
   transform: translateX(4px);
+}
+
+.cs-next-project-link:active {
+  transform: scale(0.98);
+  transition-duration: var(--motion-press);
 }
 
 .cs-next-label {
@@ -3986,8 +4347,15 @@ body::-webkit-scrollbar { display: none; }
   letter-spacing: 0.05em;
   color: rgba(201, 201, 201, 0.4);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: color var(--motion-hover) ease,
+              background var(--motion-hover) ease,
+              border-color var(--motion-hover) ease,
+              transform var(--motion-press) var(--motion-ease-out);
   white-space: nowrap;
+}
+
+.cs-mobile-pill:active {
+  transform: scale(0.96);
 }
 
 .cs-mobile-pill-active {
@@ -4144,7 +4512,13 @@ body::-webkit-scrollbar { display: none; }
   color: rgba(255, 255, 255, 0.85);
   cursor: pointer;
   z-index: 2;
-  transition: opacity 0.25s ease, background 0.2s ease, transform 0.2s ease;
+  transition: opacity 0.25s ease,
+              background var(--motion-hover) ease,
+              transform var(--motion-press) var(--motion-ease-out);
+}
+
+.reel-dock-action:active {
+  transform: scale(0.9);
 }
 
 .reel-dock-action:hover {
@@ -4343,7 +4717,10 @@ body::-webkit-scrollbar { display: none; }
   justify-content: center;
   opacity: 0;
   transform: scale(0.8);
-  transition: all 0.3s ease;
+  transition: opacity 0.3s ease,
+              transform 0.3s ease,
+              background var(--motion-hover) ease,
+              border-color var(--motion-hover) ease;
   pointer-events: auto;
 }
 
@@ -4356,13 +4733,19 @@ body::-webkit-scrollbar { display: none; }
 .reel-modal-close.closing {
   opacity: 0;
   transform: scale(0.8);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.4s var(--motion-ease-in-out),
+              transform 0.4s var(--motion-ease-in-out);
   transition-delay: 0s;
 }
 
 .reel-modal-close:hover {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.4);
+}
+
+.reel-modal-close:active {
+  transform: scale(0.92);
+  transition-duration: var(--motion-press);
 }
 
 /* scrollable reel container */
@@ -4452,7 +4835,21 @@ body::-webkit-scrollbar { display: none; }
   background: rgba(201, 201, 201, 0.15);
   border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background var(--motion-hover) ease,
+              transform var(--motion-press) var(--motion-ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .reel-modal-dot:hover {
+    background: rgba(201, 201, 201, 0.4);
+  }
+}
+
+/* 6px target, so it grows rather than shrinks: a shrinking dot disappears under
+   the cursor at the exact moment it is pressed */
+.reel-modal-dot:active {
+  transform: scale(1.4);
+  transition-duration: var(--motion-press);
 }
 
 .reel-modal-dot-active {
@@ -4544,4 +4941,75 @@ body::-webkit-scrollbar { display: none; }
   .reel-modal-esc-hint {
     display: none;
   }
+}
+
+/* ─── reduced motion ────────────────────────────────────
+   the site runs a dozen decorative loops that never stop: a bouncing flag,
+   pulsing arrows, a spinning gradient ring, a breathing status dot. none of them
+   carry information, and continuous motion is exactly what someone who asked the
+   os to calm interfaces down is asking to be spared.
+
+   this is not a blanket kill switch. reduced motion means fewer and gentler
+   animations, not none, so the fades and colour changes that explain what just
+   happened all stay: only the endless loops and the position changes go. */
+
+@media (prefers-reduced-motion: reduce) {
+  .flag-bounce,
+  .hero-scroll-indicator,
+  .hero-scroll-arrow-1,
+  .hero-scroll-arrow-2,
+  .hero-scroll-arrow-3,
+  .showcase-click-cursor.visible,
+  .chat-bubble-pulse,
+  .chat-bubble::before,
+  .chat-modal-status-dot,
+  .chat-modal-input-wrapper.typing::before,
+  .city-modal-dragme.visible {
+    animation: none;
+  }
+
+  /* the shimmer travels a gradient across text, so it reads as movement even
+     though nothing changes position. hold it still and keep the colour. */
+  .chat-bubble-label,
+  .chat-modal-placeholder-shimmer,
+  .shimmer-city {
+    animation: none;
+    background-position: 0 0;
+  }
+
+  /* a press still needs to answer, it just answers without travel */
+  .btn-primary:active,
+  .cs-mobile-pill:active,
+  .navbar-toggle:active,
+  .reel-dock-action:active,
+  .sound-toggle:active,
+  .sound-dock .sound-dock-button:active,
+  .cs-carousel-dot:active,
+  .reel-modal-dot:active,
+  .chat-modal-close:active,
+  .book-modal-close:active,
+  .reel-modal-close:active,
+  .navbar-dropdown-close:active,
+  .cs-wip-overlay-close:active,
+  .cs-sidebar-next:active,
+  .cs-next-project-link:active,
+  .showcase-mockup-link:active,
+  .exp-card:active {
+    transform: none;
+    opacity: 0.65;
+  }
+
+  /* entrances still arrive, they just arrive by fading. keeping each one's own
+     duration and delay preserves the staged reveal, so the page still explains
+     itself in the same order, without anything scaling, sliding or blurring. */
+  .hero-section,
+  .hero-image-wrap,
+  .sound-dock {
+    animation-name: reducedFadeIn;
+  }
+}
+
+@keyframes reducedFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }

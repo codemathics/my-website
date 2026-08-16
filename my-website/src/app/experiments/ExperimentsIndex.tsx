@@ -2,9 +2,32 @@
 
 import React from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { experiments } from "@/components/experiments/registry";
-import { SPRING } from "@/components/experiments/shared";
+
+function ExperimentCard({
+  href,
+  hosted,
+  children,
+}: {
+  href: string;
+  hosted: boolean;
+  children: React.ReactNode;
+}) {
+  // hosted apps are a vite spa behind a rewrite. a next <Link> would
+  // client-navigate and 404, so those cards do a real document load.
+  if (hosted) {
+    return (
+      <a href={href} className="exp-card">
+        {children}
+      </a>
+    );
+  }
+  return (
+    <Link href={href} className="exp-card">
+      {children}
+    </Link>
+  );
+}
 
 export default function ExperimentsIndex() {
   // newest day first
@@ -29,14 +52,8 @@ export default function ExperimentsIndex() {
 
       <div className="exp-grid">
         {items.map(({ meta, Component }) => (
-          <motion.div
-            key={meta.slug}
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-60px" }}
-            transition={SPRING}
-          >
-            <Link href={`/experiments/${meta.slug}`} className="exp-card">
+          <div key={meta.slug} className="exp-card-enter">
+            <ExperimentCard href={meta.href ?? `/experiments/${meta.slug}`} hosted={Boolean(meta.href)}>
               <div className="exp-card-canvas">
                 <div className="exp-card-preview">
                   <Component />
@@ -45,14 +62,14 @@ export default function ExperimentsIndex() {
               <div className="exp-card-meta">
                 <div className="exp-card-left">
                   <span className="exp-card-day">
-                    day {String(meta.day).padStart(2, "0")}
+                    {meta.kicker ?? `day ${String(meta.day).padStart(2, "0")}`}
                   </span>
                   <span className="exp-card-name">{meta.name}</span>
                 </div>
                 <span className="exp-tag">{meta.aesthetic}</span>
               </div>
-            </Link>
-          </motion.div>
+            </ExperimentCard>
+          </div>
         ))}
       </div>
     </main>

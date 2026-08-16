@@ -37,6 +37,24 @@ const nextConfig: NextConfig = {
     return config;
   },
 
+  async rewrites() {
+    // morphyn is a hosted vite spa (landing, studio, render) under
+    // public/experiments/morphyn. the experiments card links to /studio.
+    // these paths are not an [slug] detail page, so they have to win
+    // before the app router 404s them.
+    const morphyn = "/experiments/morphyn/index.html";
+    return {
+      beforeFiles: [
+        { source: "/experiments/morphyn", destination: morphyn },
+        { source: "/experiments/morphyn/", destination: morphyn },
+        { source: "/experiments/morphyn/studio", destination: morphyn },
+        { source: "/experiments/morphyn/studio/", destination: morphyn },
+        { source: "/experiments/morphyn/render", destination: morphyn },
+        { source: "/experiments/morphyn/render/", destination: morphyn },
+      ],
+    };
+  },
+
   async redirects() {
     return [
       {
