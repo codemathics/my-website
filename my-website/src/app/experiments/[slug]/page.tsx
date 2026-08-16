@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { codeToHtml } from "shiki";
 import Navbar from "@/components/Navbar";
 import {
-  experiments,
+  detailExperiments,
   getExperiment,
   getAdjacent,
   githubUrl,
@@ -14,7 +14,7 @@ import ExperimentView from "./ExperimentView";
 import "../experiments.css";
 
 export function generateStaticParams() {
-  return experiments.map((e) => ({ slug: e.meta.slug }));
+  return detailExperiments.map((e) => ({ slug: e.meta.slug }));
 }
 
 export const dynamicParams = false;

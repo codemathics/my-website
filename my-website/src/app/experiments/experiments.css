@@ -66,6 +66,11 @@
 .exp-card:active {
   transform: scale(0.985);
 }
+@media (hover: hover) and (pointer: fine) {
+  .exp-card:hover {
+    border-color: rgba(255,255,255,0.16);
+  }
+}
 .exp-card-canvas {
   position: relative;
   height: 280px;
