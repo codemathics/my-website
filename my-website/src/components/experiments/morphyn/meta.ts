@@ -10,5 +10,5 @@ export const meta: ExperimentMeta = {
   aesthetic: "synthesis",
   accent: "#5B4FE8",
   sourcePath: "src/components/experiments/morphyn/MorphynCard.tsx",
-  href: "/experiments/morphyn/studio",
+  href: "https://morphyn.fly.dev/studio",
 };

@@ -1,5 +1,5 @@
 // morphyn - card preview for the hosted studio.
-// the live app is the vite spa at /experiments/morphyn/studio. this file is
+// the live app is https://morphyn.fly.dev/studio. this file is
 // only the index-card media: the brand mark on the same dotted canvas the
 // other experiment cards use.
 
