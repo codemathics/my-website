@@ -2,9 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
 import { experiments } from "@/components/experiments/registry";
-import { SPRING } from "@/components/experiments/shared";
 
 function ExperimentCard({
   href,
@@ -34,9 +32,6 @@ function ExperimentCard({
 export default function ExperimentsIndex() {
   // newest day first
   const items = [...experiments].reverse();
-  /* css media queries can't reach inside framer-motion, so the card entrances
-     have to ask for themselves: the fade stays, the travel goes. */
-  const reduceMotion = useReducedMotion();
 
   return (
     <main className="exp-shell">
@@ -57,13 +52,7 @@ export default function ExperimentsIndex() {
 
       <div className="exp-grid">
         {items.map(({ meta, Component }) => (
-          <motion.div
-            key={meta.slug}
-            initial={{ opacity: 0, y: reduceMotion ? 0 : 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-60px" }}
-            transition={reduceMotion ? { duration: 0.2 } : SPRING}
-          >
+          <div key={meta.slug} className="exp-card-enter">
             <ExperimentCard href={meta.href ?? `/experiments/${meta.slug}`} hosted={Boolean(meta.href)}>
               <div className="exp-card-canvas">
                 <div className="exp-card-preview">
@@ -80,7 +69,7 @@ export default function ExperimentsIndex() {
                 <span className="exp-tag">{meta.aesthetic}</span>
               </div>
             </ExperimentCard>
-          </motion.div>
+          </div>
         ))}
       </div>
     </main>
