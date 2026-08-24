@@ -46,7 +46,9 @@ Find curves at [easing.dev](https://easing.dev/) or [easings.co](https://easings
 | Modals, drawers | 200–500ms |
 | Marketing / explanatory | Can be longer |
 
-**Rule: UI animations stay under 300ms.** A 180ms dropdown feels more responsive than a 400ms one. Faster spinners make load feel faster (same actual time). Instant tooltips after the first (skip delay + animation) make a toolbar feel faster.
+**Rule: most UI animations stay under 300ms.** Modals and drawers are the one documented exception — their larger surface and longer travel earn the 200–500ms in the table above. Every other UI element over 300ms is a finding unless the diff states a reason.
+
+A 180ms dropdown feels more responsive than a 400ms one. Faster spinners make load feel faster (same actual time). Instant tooltips after the first (skip delay + animation) make a toolbar feel faster.
 
 ## Physicality
 
@@ -72,7 +74,12 @@ Feel natural because they simulate physics; no fixed duration — they settle on
 
 Keep bounce subtle (0.1–0.3); avoid bounce in most UI — reserve for drag-to-dismiss and playful interactions. Springs maintain velocity when interrupted (keyframes restart from zero), so they're ideal for gestures users may reverse mid-motion.
 
-Mouse interactions: interpolate with `useSpring` rather than tying value directly to mouse position (direct = artificial, no momentum). Only do this when the motion is decorative.
+Mouse interactions: interpolate with `useSpring` rather than tying the value directly to mouse position (direct = artificial, no momentum). Wire it up one of two ways — a plain number passed to `useSpring` only *seeds* a standalone spring, so on its own it never follows the mouse:
+
+- **Changing source** → pass a `MotionValue`; the spring subscribes and re-targets whenever the source changes.
+- **Standalone spring** → keep the returned value and call `.set(next)` to re-target it as the mouse moves.
+
+Only do this when the motion is decorative.
 
 ## Interruptibility
 
@@ -109,19 +116,20 @@ Slow where the user is deciding, fast where the system responds.
 
 ## Performance
 
-- **Only animate `transform` and `opacity`** — they skip layout/paint and run on the GPU. `padding`/`margin`/`height`/`width`/`top`/`left` trigger all three rendering steps.
+- **Prefer `transform` and `opacity`** — they are the only properties the compositor can animate without layout or paint. `padding`/`margin`/`height`/`width`/`top`/`left` trigger all three rendering steps, so animating them is a finding unless the interaction genuinely requires it (see the exceptions below).
+- **Documented exceptions, not free passes.** `clip-path`, `filter`/`backdrop-filter`, and height transitions are legitimate tools — this reference recommends them for reveals, crossfade masking, and accordions — but they paint rather than composite, so acceleration is conditional. Reach for them when the interaction needs them, keep the animated area small, and profile the result on the slowest target device instead of assuming it is free.
 - **Don't drive child transforms via a CSS variable on the parent** — it recalcs styles for all children. Set `transform` directly on the element.
   ```js
   element.style.setProperty('--swipe-amount', `${d}px`); // bad: recalc on all children
   element.style.transform = `translateY(${d}px)`;        // good: only this element
   ```
-- **Framer Motion shorthands are NOT hardware-accelerated.** `x`/`y`/`scale` run on the main thread via rAF and drop frames under load. Use the full transform string:
+- **Motion shorthands are compositor-friendly properties driven from the main thread.** `x`/`y`/`scale`/`rotate` compile to `transform`, so they skip layout and paint. The caveat is what *drives* them: independent transform values are composed per frame in JavaScript, so a blocked main thread stalls the updates. A single `transform` string can instead take Motion's accelerated (WAAPI) path, which keeps ticking while the main thread is busy. Default to the shorthands for their ergonomics and independent per-axis timing; only switch when profiling shows dropped frames during main-thread work:
   ```jsx
-  <motion.div animate={{ x: 100 }} />                          // drops frames under load
-  <motion.div animate={{ transform: "translateX(100px)" }} />  // hardware accelerated
+  <motion.div animate={{ x: 100 }} />                          // ergonomic default
+  <motion.div animate={{ transform: "translateX(100px)" }} />  // can take the accelerated path
   ```
-- **CSS animations beat JS under load** — they run off the main thread; rAF-based animations stutter while the browser loads/scripts/paints. Use CSS for predetermined motion, JS for dynamic/interruptible.
-- **WAAPI** gives JS control with CSS performance (hardware-accelerated, interruptible, no library):
+- **CSS animations survive a busy main thread only when the property allows it** — a CSS animation on `transform`/`opacity` can be ticked by the compositor and stays smooth while the browser loads/scripts/paints; one on `height` or `background-color` still runs layout/paint on the main thread every frame and offers no such protection. Use CSS for predetermined motion, JS for dynamic/interruptible, and measure under load rather than assuming CSS is inherently faster.
+- **WAAPI** gives JS control with the same compositor path as CSS (interruptible, no library) — subject to the same property caveat:
   ```js
   element.animate([{ clipPath: 'inset(0 0 100% 0)' }, { clipPath: 'inset(0 0 0 0)' }],
     { duration: 1000, fill: 'forwards', easing: 'cubic-bezier(0.77, 0, 0.175, 1)' });
@@ -144,7 +152,7 @@ Slow where the user is deciding, fast where the system responds.
 
 ## Masking imperfect crossfades
 
-When a crossfade shows two overlapping states despite tuning easing/duration, add subtle `filter: blur(2px)` during the transition to blend them into one perceived transformation. Keep blur < 20px (heavy blur is expensive, especially Safari).
+When a crossfade shows two overlapping states despite tuning easing/duration, add subtle `filter: blur(2px)` during the transition to blend them into one perceived transformation. This is one of the documented paint-cost exceptions: keep blur < 20px, keep the blurred area small, and profile it (heavy blur is expensive, especially in Safari).
 
 ## Stagger
 
@@ -161,7 +169,8 @@ Stagger group entrances; 30–80ms between items. Longer delays feel slow. Stagg
 
 ```css
 @media (prefers-reduced-motion: reduce) {
-  .element { animation: fade 0.2s ease; } /* keep opacity/color, drop transform-based motion */
+  /* Keep the opacity/color feedback, drop transform-based motion. */
+  .element { transition: opacity 200ms ease; transform: none; }
 }
 @media (hover: hover) and (pointer: fine) {
   .element:hover { transform: scale(1.05); } /* gate hover motion — touch fires false hovers on tap */

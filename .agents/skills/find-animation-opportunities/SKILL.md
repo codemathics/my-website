@@ -50,7 +50,7 @@ The answer must be one of these, named explicitly:
 
 ### 3. Speed — can it stay inside budget?
 
-The suggestion must work within the standard budgets (UI under 300ms):
+The suggestion must work within the standard budgets — most UI under 300ms, with modals and drawers the documented exception at 200–500ms:
 
 | Element | Duration |
 | --- | --- |
@@ -76,7 +76,7 @@ Sweep for these seams — each is a known class of genuine opportunity:
 
 **Teleporting state**
 - Content that swaps, appears, or vanishes instantly (conditional renders, route content, expanding sections) → fade/scale entrances from `scale(0.95–0.97)` + `opacity: 0`, `ease-out`, never `scale(0)`; `@starting-style` for entry without JS
-- Accordions/collapses that snap open → height + opacity transition
+- Accordions/collapses that snap open → height + opacity transition (a documented exception to the transform/opacity preference — height animates layout every frame, so keep the panel modest and profile it). Say which height technique the suggestion assumes: `height: 0` → `auto` needs `interpolate-size: allow-keywords` and is progressive enhancement, so pair it with a measured numeric height (from `scrollHeight`, applied as an inline custom property) for browsers without it, or use a `grid-template-rows: 0fr → 1fr` wrapper instead
 - List items added/removed with no bridge (and the list isn't high-frequency) → enter/exit transitions; CSS transitions, not keyframes, so rapid triggers retarget smoothly
 
 **Missing spatial story**
@@ -112,7 +112,7 @@ One row per surviving suggestion, ordered by leverage:
 | 1 | `Toast.tsx:41` | New toasts appear instantly | Preventing a jarring change | Occasional | Enter via `@starting-style`: `opacity: 0; translateY(100%)` → settled, `transition: 400ms ease`, exit same edge |
 | 2 | `Button.tsx:18` | No press feedback | Feedback | Tens/day | `:active { transform: scale(0.97) }`, `transition: transform 160ms ease-out` — subtle enough for the frequency tier |
 
-Every "Suggested motion" cell carries exact values — the curve, the duration, the properties — pulled from this repo's shared vocabulary (`--ease-out: cubic-bezier(0.23, 1, 0.32, 1)`, `--ease-in-out: cubic-bezier(0.77, 0, 0.175, 1)`, `--ease-drawer: cubic-bezier(0.32, 0.72, 0, 1)`), never approximated. Animate `transform` and `opacity` only; include reduced-motion handling (gentler, not zero) and `@media (hover: hover) and (pointer: fine)` gating when the suggestion involves hover.
+Every "Suggested motion" cell carries exact values — the curve, the duration, the properties — pulled from this repo's shared vocabulary (`--ease-out: cubic-bezier(0.23, 1, 0.32, 1)`, `--ease-in-out: cubic-bezier(0.77, 0, 0.175, 1)`, `--ease-drawer: cubic-bezier(0.32, 0.72, 0, 1)`), never approximated. Prefer `transform` and `opacity`; where the hunt list calls for a `clip-path` reveal or a height transition, name it as the exception it is, keep the animated area small, and say the result needs profiling on the slowest target device. Always include reduced-motion handling (gentler, not zero) and `@media (hover: hover) and (pointer: fine)` gating when the suggestion involves hover.
 
 ### Part 2 — Rejected candidates (REQUIRED)
 

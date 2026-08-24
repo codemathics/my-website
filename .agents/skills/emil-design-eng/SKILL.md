@@ -49,7 +49,7 @@ When reviewing UI code, you MUST use a markdown table with Before/After columns.
 
 Wrong format (never do this):
 
-```
+```text
 Before: transition: all 300ms
 After: transition: transform 200ms ease-out
 ────────────────────────────
@@ -132,7 +132,7 @@ Is the element entering or exiting?
 | Modals, drawers          | 200-500ms     |
 | Marketing/explanatory    | Can be longer |
 
-**Rule: UI animations should stay under 300ms.** A 180ms dropdown feels more responsive than a 400ms one. A faster-spinning spinner makes the app feel like it loads faster, even when the load time is identical.
+**Rule: most UI animations should stay under 300ms.** Modals and drawers are the documented exception — the table's 200-500ms range reflects their larger surface and longer travel. A 180ms dropdown feels more responsive than a 400ms one. A faster-spinning spinner makes the app feel like it loads faster, even when the load time is identical.
 
 ### Perceived performance
 
@@ -159,18 +159,26 @@ Springs feel more natural than duration-based animations because they simulate r
 
 Tying visual changes directly to mouse position feels artificial because it lacks motion. Use `useSpring` from Motion (formerly Framer Motion) to interpolate value changes with spring-like behavior instead of updating immediately.
 
+Drive it from a `MotionValue`. `useSpring` given a plain number treats it as the _initial_ value only, so a spring seeded with `mouseX * 0.1` never moves again as the mouse moves; given a `MotionValue` it subscribes to the source and re-targets on every change.
+
 ```jsx
-import { useSpring } from 'framer-motion';
+import { useMotionValue, useSpring, useTransform } from 'framer-motion';
 
-// Without spring: feels artificial, instant
-const rotation = mouseX * 0.1;
+// The pointer position as a MotionValue, updated on every move.
+const mouseX = useMotionValue(0);
+const onPointerMove = (e) => mouseX.set(e.clientX);
 
-// With spring: feels natural, has momentum
-const springRotation = useSpring(mouseX * 0.1, {
+// Without spring: tied directly to the pointer — artificial, no momentum.
+const rotation = useTransform(mouseX, (x) => x * 0.1);
+
+// With spring: subscribes to `rotation` and re-targets as it changes, so motion carries momentum.
+const springRotation = useSpring(rotation, {
   stiffness: 100,
   damping: 10,
 });
 ```
+
+If the source is plain React state rather than a `MotionValue`, keep a standalone spring and push new targets into it with `.set()` when the value changes — the spring animates toward each new target instead of being re-initialized.
 
 This works because the animation is **decorative** — it doesn't serve a function. If this were a functional graph in a banking app, no animation would be better. Know when decoration helps and when it hinders.
 
@@ -192,7 +200,9 @@ Keep bounce subtle (0.1-0.3) when used. Avoid bounce in most UI contexts. Use it
 
 ### Interruptibility advantage
 
-Springs maintain velocity when interrupted — CSS animations and keyframes restart from zero. This makes springs ideal for gestures users might change mid-motion. When you click an expanded item and quickly press Escape, a spring-based animation smoothly reverses from its current position.
+Springs maintain velocity when interrupted, which makes them ideal for gestures users might change mid-motion. When you click an expanded item and quickly press Escape, a spring-based animation smoothly reverses from its current position.
+
+The CSS alternatives are not equivalent to each other. **`@keyframes` animations restart from zero** when re-triggered — they run a fixed timeline and don't adapt to where the element currently is. **CSS transitions do retarget**: interrupt one and it continues from the element's current computed style toward the new value. So transitions are already interruptible in the positional sense; what they don't carry through the interruption is velocity, which is the part springs add.
 
 ## Component Building Principles
 
@@ -434,7 +444,7 @@ Start with `clip-path: inset(0 0 100% 0)` (hidden from bottom). Animate to `inse
 
 ### Comparison sliders
 
-Overlay two images. Clip the top one with `clip-path: inset(0 50% 0 0)`. Adjust the right inset value based on drag position. No extra DOM elements needed, fully hardware-accelerated.
+Overlay two images. Clip the top one with `clip-path: inset(0 50% 0 0)`. Adjust the right inset value based on drag position. No extra DOM elements needed. `clip-path` repaints rather than compositing, and how much a given browser accelerates it is implementation-dependent, so treat the cost as conditional: cheap on a modest image, worth profiling in your target browsers on a large one or a slow device.
 
 ## Gesture and Drag Interactions
 
@@ -476,9 +486,11 @@ Instead of preventing upward drag entirely, allow it with increasing friction. I
 
 ## Performance Rules
 
-### Only animate transform and opacity
+### Prefer transform and opacity
 
-These properties skip layout and paint, running on the GPU. Animating `padding`, `margin`, `height`, or `width` triggers all three rendering steps.
+These are the only properties the compositor can animate without layout or paint. Animating `padding`, `margin`, `height`, or `width` triggers all three rendering steps, so reach for them only when the interaction genuinely needs them.
+
+The exceptions are real but conditional. `clip-path`, `filter`/`backdrop-filter`, and height transitions power the reveals, hold-to-delete overlays, comparison sliders, accordions, and blur-masked crossfades described elsewhere in this document. They paint rather than composite, so their cost depends on the animated area and the device — keep the region small and profile performance-sensitive motion instead of assuming it is free.
 
 ### CSS variables are inheritable
 
@@ -492,27 +504,29 @@ element.style.setProperty('--swipe-amount', `${distance}px`);
 element.style.transform = `translateY(${distance}px)`;
 ```
 
-### Framer Motion hardware acceleration caveat
+### Motion's shorthands and the main thread
 
-Framer Motion's shorthand properties (`x`, `y`, `scale`) are NOT hardware-accelerated. They use `requestAnimationFrame` on the main thread. For hardware acceleration, use the full `transform` string:
+Motion's shorthand properties (`x`, `y`, `scale`, `rotate`) compile to `transform`, so they do skip layout and paint like any other transform. The caveat is not the property but the driver: independent transform values are composed per frame in JavaScript, so a blocked main thread stalls the updates. A single `transform` string can instead be handed to Motion's accelerated (WAAPI) path, which keeps ticking while the main thread is busy.
+
+The shorthands are the right default — they are more ergonomic and allow independent easing per axis. Switch only when profiling shows dropped frames during main-thread work:
 
 ```jsx
-// NOT hardware accelerated (convenient but drops frames under load)
+// Ergonomic default, independently animatable per axis
 <motion.div animate={{ x: 100 }} />
 
-// Hardware accelerated (stays smooth even when main thread is busy)
+// Can take the accelerated path; reach for it when profiling says so
 <motion.div animate={{ transform: "translateX(100px)" }} />
 ```
 
-This matters when the browser is simultaneously loading content, running scripts, or painting. At Vercel, the dashboard tab animation used Shared Layout Animations and dropped frames during page loads. Switching to CSS animations (off main thread) fixed it.
+This matters when the browser is simultaneously loading content, running scripts, or painting. At Vercel, the dashboard tab animation used Shared Layout Animations and dropped frames during page loads. Switching to CSS animations fixed it.
 
-### CSS animations beat JS under load
+### JS animation is only as available as the main thread
 
-CSS animations run off the main thread. When the browser is busy loading a new page, Framer Motion animations (using `requestAnimationFrame`) drop frames. CSS animations remain smooth. Use CSS for predetermined animations; JS for dynamic, interruptible ones.
+A CSS animation on `transform` or `opacity` can be ticked by the compositor, so it stays smooth while the browser loads a new page; a `requestAnimationFrame`-driven animation competes for the same main thread and drops frames. That protection is property-dependent, though — a CSS animation on `height` or `background-color` still runs layout or paint every frame and is no safer than JS. Use CSS for predetermined animations, JS for dynamic and interruptible ones, and measure under load rather than assuming CSS wins.
 
 ### Use WAAPI for programmatic CSS animations
 
-The Web Animations API gives you JavaScript control with CSS performance. Hardware-accelerated, interruptible, and no library needed.
+The Web Animations API gives you JavaScript control on the same rendering path as CSS: interruptible, no library needed, and compositor-driven for the properties that qualify.
 
 ```js
 element.animate([{ clipPath: 'inset(0 0 100% 0)' }, { clipPath: 'inset(0 0 0 0)' }], {
@@ -531,8 +545,9 @@ Animations can cause motion sickness. Reduced motion means fewer and gentler ani
 ```css
 @media (prefers-reduced-motion: reduce) {
   .element {
-    animation: fade 0.2s ease;
-    /* No transform-based motion */
+    /* Keep the opacity change; no transform-based motion. */
+    transition: opacity 200ms ease;
+    transform: none;
   }
 }
 ```
