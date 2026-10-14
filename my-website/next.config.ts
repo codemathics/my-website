@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // the preview is opened at 127.0.0.1 as well as localhost. next only allows
+  // localhost by default, and blocks /_next on any other host, which leaves a
+  // blank page after the server html arrives.
+  allowedDevOrigins: ["127.0.0.1"],
   // pin the workspace root — a stray lockfile in a parent dir otherwise makes
   // turbopack infer the wrong root and fail to resolve tailwindcss.
   turbopack: {
