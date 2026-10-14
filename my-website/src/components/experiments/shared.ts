@@ -28,4 +28,11 @@ export interface ExperimentMeta {
   sourcePath: string;
   /** figma community link where people can grab the design. omitted until published */
   figmaUrl?: string;
+  /**
+   * if set, the index card is a full-page link here instead of /experiments/[slug].
+   * used for hosted apps that are not an ExperimentView detail page.
+   */
+  href?: string;
+  /** small label above the name. defaults to `day NN`. */
+  kicker?: string;
 }

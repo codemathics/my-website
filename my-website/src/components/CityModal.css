@@ -44,7 +44,10 @@
   z-index: 9999;
   opacity: 0;
   transform: scale(0.8);
-  transition: all 0.3s ease;
+  transition: opacity 0.3s ease,
+              transform 0.3s ease,
+              background var(--motion-hover) ease,
+              border-color var(--motion-hover) ease;
   pointer-events: auto;
 }
 
@@ -56,12 +59,18 @@
 .city-modal-close.closing {
   opacity: 0;
   transform: scale(0.8);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.4s var(--motion-ease-in-out),
+              transform 0.4s var(--motion-ease-in-out);
 }
 
 .city-modal-close:hover {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.4);
+}
+
+.city-modal-close:active {
+  transform: scale(0.92);
+  transition-duration: var(--motion-press);
 }
 
 /* content container */

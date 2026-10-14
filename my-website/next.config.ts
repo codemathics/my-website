@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // the preview is opened at 127.0.0.1 as well as localhost. next only allows
+  // localhost by default, and blocks /_next on any other host, which leaves a
+  // blank page after the server html arrives.
+  allowedDevOrigins: ["127.0.0.1"],
   // pin the workspace root — a stray lockfile in a parent dir otherwise makes
   // turbopack infer the wrong root and fail to resolve tailwindcss.
   turbopack: {
@@ -35,6 +39,24 @@ const nextConfig: NextConfig = {
       config.watchOptions = { ...(config.watchOptions ?? {}), ignored: merged };
     }
     return config;
+  },
+
+  async rewrites() {
+    // morphyn is a hosted vite spa (landing, studio, render) under
+    // public/experiments/morphyn. the experiments card links to /studio.
+    // these paths are not an [slug] detail page, so they have to win
+    // before the app router 404s them.
+    const morphyn = "/experiments/morphyn/index.html";
+    return {
+      beforeFiles: [
+        { source: "/experiments/morphyn", destination: morphyn },
+        { source: "/experiments/morphyn/", destination: morphyn },
+        { source: "/experiments/morphyn/studio", destination: morphyn },
+        { source: "/experiments/morphyn/studio/", destination: morphyn },
+        { source: "/experiments/morphyn/render", destination: morphyn },
+        { source: "/experiments/morphyn/render/", destination: morphyn },
+      ],
+    };
   },
 
   async redirects() {

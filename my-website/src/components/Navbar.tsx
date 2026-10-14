@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import SoundToggle from "@/components/SoundToggle";
 import "./NavLink.css";
 
 interface NavItem {
@@ -236,6 +237,9 @@ export default function Navbar({ showLogo = true, showNav = true }: NavbarProps)
               onClick={closeMenu}
             />
           ))}
+          {/* phone-sized fallback: the floating dock is hidden at this width to
+              keep the bottom-right corner clear. */}
+          <SoundToggle variant="row" />
         </div>
       </div>
     </>
