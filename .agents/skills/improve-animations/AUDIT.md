@@ -33,7 +33,7 @@ Decision order for easing:
 --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);     /* iOS-like drawer curve */
 ```
 
-Duration budgets — **UI animations stay under 300ms**:
+Duration budgets — **most UI animations stay under 300ms**, with modals and drawers the documented exception at 200–500ms:
 
 | Element | Duration |
 | --- | --- |
@@ -43,7 +43,7 @@ Duration budgets — **UI animations stay under 300ms**:
 | Modals, drawers | 200–500ms |
 | Marketing / explanatory | Can be longer |
 
-Hunt for: `ease-in` anywhere, bare `ease`/`linear` on entrances, durations > 300ms on UI elements, tooltip delay + animation on every tooltip in a toolbar (after the first, they should be instant).
+Hunt for: `ease-in` anywhere, bare `ease`/`linear` on entrances, durations > 300ms on UI elements other than modals and drawers, modals and drawers past 500ms, tooltip delay + animation on every tooltip in a toolbar (after the first, they should be instant).
 
 ## 3. Physicality & origin
 
@@ -70,20 +70,22 @@ Hunt for: `@keyframes` on toasts/toggles/rapidly-triggered UI, gesture handlers 
 
 ## 5. Performance
 
-- **Animate `transform` and `opacity` only.** `width`/`height`/`margin`/`padding`/`top`/`left` trigger layout + paint + composite.
-- **`transition: all`** animates unintended properties off-GPU — always a finding.
-- **Framer Motion `x`/`y`/`scale` shorthands are not hardware-accelerated** — they run on the main thread and drop frames under load. Target: the full transform string, `animate={{ transform: "translateX(100px)" }}`.
+- **Prefer `transform` and `opacity`.** They are the only properties the compositor animates without layout or paint. `width`/`height`/`margin`/`padding`/`top`/`left` trigger layout + paint + composite, so they are a finding unless the interaction requires them.
+- **`clip-path`, `filter`/`backdrop-filter`, and height transitions are documented exceptions**, not violations — categories 7 and 8 recommend them for reveals, crossfade masking, and accordions. They paint rather than composite, so acceleration is conditional: keep the animated area small and require profiling on the slowest target device rather than assuming the cost is free.
+- **`transition: all`** animates unintended properties, including layout and paint ones — always a finding.
+- **Motion's `x`/`y`/`scale` shorthands compile to `transform`** and so skip layout and paint. What can drop frames is the driver, not the property: independent transform values are composed per frame in JavaScript, so a blocked main thread stalls them, while a single `transform` string can take Motion's accelerated (WAAPI) path. Treat the shorthands as the ergonomic default and only target the full string when profiling shows dropped frames during main-thread work.
 - **Don't drive child transforms via a CSS variable on the parent** — it recalcs styles for all children. Set `transform` directly on the element.
-- CSS (and WAAPI) beat rAF-based JS under load — use CSS for predetermined motion, JS/springs for dynamic and gesture-driven motion.
+- CSS and WAAPI escape a busy main thread only for compositor-friendly properties; a CSS animation on `height` or `background-color` still does layout/paint every frame. Use CSS for predetermined motion, JS/springs for dynamic and gesture-driven motion, and measure under load.
 - Keep transition-time `filter: blur()` under 20px — heavy blur is expensive, especially in Safari.
 
-Hunt for: `transition: all`, animated layout properties, Framer Motion shorthand props on busy pages, `setProperty('--x', …)` driving child transforms, rAF loops doing what CSS could.
+Hunt for: `transition: all`, animated layout properties with no stated reason, large-area `clip-path`/`filter` motion that was never profiled, `setProperty('--x', …)` driving child transforms, rAF loops doing what CSS could.
 
 ## 6. Accessibility
 
 ```css
 @media (prefers-reduced-motion: reduce) {
-  .element { animation: fade 0.2s ease; } /* keep opacity/color, drop movement */
+  /* Keep the opacity/color feedback, drop the movement. */
+  .element { transition: opacity 200ms ease; transform: none; }
 }
 @media (hover: hover) and (pointer: fine) {
   .element:hover { transform: scale(1.05); } /* touch fires false hovers on tap */
@@ -99,7 +101,7 @@ Hunt for: movement with no `prefers-reduced-motion` handling, ungated `:hover` m
 - Motion should match the product's personality — playful can be bouncier, a dashboard stays crisp. Mismatched personality across components is a finding.
 - Curves and durations should live as shared tokens. Five hand-typed cubic-beziers that almost match is a consolidation finding.
 - Everything-at-once group entrances where a **30–80ms stagger** belongs. Stagger is decorative — it must never block interaction.
-- A jarring crossfade that shows two overlapping states can be masked with subtle `filter: blur(2px)` during the transition.
+- A jarring crossfade that shows two overlapping states can be masked with subtle `filter: blur(2px)` during the transition — a documented paint-cost exception per category 5, so keep the blurred area small and profile it.
 
 Hunt for: duplicated near-identical easings/durations, one bouncy component in a crisp app, list/grid entrances with no stagger, crossfades that visibly double-expose.
 
